@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ForgeTrader — Learn Trading. For Real. For Free.</title>
+<meta name="theme-color" content="#0f0f13">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23f59e0b'/><text x='16' y='22' text-anchor='middle' font-size='18' font-weight='900' fill='%23000'>F</text></svg>">
+<script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#08080c;--panel:#12121a;--card:#181825;--line:#26263a;--muted:#8b8baa;--text:#e8e8f0;--gold:#f59e0b;--gold2:#fbbf24;--orange:#ff6b35;--green:#10b981;--red:#ef4444;--blue:#3b82f6;--rankE:#6b7280;--rankD:#10b981;--rankC:#3b82f6;--rankB:#8b5cf6;--rankA:#f59e0b;--rankS:#ff2e63}
+body{font-family:'JetBrains Mono','Consolas',monospace;background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--gold)}
+/* NAV */
+.nav{position:sticky;top:0;z-index:50;background:rgba(8,8,12,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:0;padding:0 14px;height:56px;overflow-x:auto}
+.nav-logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.08em;font-size:15px;white-space:nowrap}
+.nav-logo b{color:var(--gold)}
+.nav-logo span{background:var(--gold);color:#000;padding:2px 6px;border-radius:4px;font-size:11px}
+.nav-tabs{margin-left:18px;display:flex;gap:2px}
+.nav-tab{padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;letter-spacing:.06em;color:var(--muted);border:1px solid transparent;white-space:nowrap}
+.nav-tab.active{background:var(--panel);border-color:var(--line);color:var(--gold)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.xp-bar{width:140px;height:8px;background:#1e1e2e;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));width:0%;transition:.4s}
+.rank-badge{padding:4px 8px;border-radius:6px;font-weight:900;font-size:11px;letter-spacing:.08em}
+.hud{font-size:11px;color:var(--muted)}
+.hud b{color:var(--text)}
+/* LAYOUT */
+.wrap{max-width:1280px;margin:0 auto;padding:18px 14px}
+.view{display:none}.view.active{display:block}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.nav-tabs{margin-left:10px}.nav-right .hud{display:none}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card-h{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn-primary{background:var(--gold);color:#000;border-color:var(--gold);font-weight:800}
+.btn-primary:hover{background:var(--gold2)}
+.btn-ghost{background:transparent}
+.btn-sm{padding:6px 9px;font-size:11px}
+.badge{padding:2px 7px;border-radius:999px;font-size:10px;letter-spacing:.08em;border:1px solid var(--line);color:var(--muted)}
+.badge-gold{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.12)}
+.kbd{padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;font-size:11px;color:var(--muted);background:var(--card)}
+/* HERO */
+.hero{background:radial-gradient(800px 400px at 30% 0%, rgba(245,158,11,.18), transparent 60%), linear-gradient(180deg, #12121a, #0c0c11);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+@media(max-width:900px){.hero{grid-template-columns:1fr}}
+.hero h1{font-size:28px;line-height:1.1;letter-spacing:-.02em}
+.hero h1 b{color:var(--gold)}
+.hero p{color:var(--muted);font-size:12px;line-height:1.6;margin-top:8px}
+.statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:120px}
+.stat b{font-size:18px}
+.stat span{font-size:10px;letter-spacing:.1em;color:var(--muted);display:block;margin-top:2px}
+/* LEVELS */
+.level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:1000px){.level-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.level-grid{grid-template-columns:1fr}}
+.level{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);position:relative}
+.level.locked{opacity:.55}
+.level-head{height:80px;display:flex;align-items:end;padding:10px;position:relative;overflow:hidden}
+.level-head::after{content:'';position:absolute;inset:0;opacity:.22;background:radial-gradient(300px 120px at 20% 0%, #fff, transparent 70%)}
+.level-num{position:absolute;top:10px;right:10px;font-weight:900;font-size:11px;letter-spacing:.1em;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);padding:3px 7px;border-radius:999px}
+.level-body{padding:12px}
+.level h3{font-size:13px;letter-spacing:.04em}
+.level p{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px;min-height:34px}
+.level-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.progress{height:6px;background:#1e1e2e;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));width:0%}
+/* LESSONS */
+.lesson-list{display:grid;gap:8px}
+.lesson{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;cursor:pointer}
+.lesson.done{border-color:rgba(16,185,129,.35)}
+.lesson.locked{opacity:.5;cursor:not-allowed}
+.lesson-icon{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;background:var(--panel);border:1px solid var(--line);font-size:13px}
+.quiz{border:1px dashed var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.02)}
+.quiz h4{font-size:12px;letter-spacing:.06em}
+.q{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.q p{font-size:12px}
+.q-opts{display:grid;gap:6px;margin-top:8px}
+.q-opts button{text-align:left;padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;font-size:12px}
+.q-opts button.correct{border-color:var(--green);background:rgba(16,185,129,.15)}
+.q-opts button.wrong{border-color:var(--red);background:rgba(239,68,68,.15)}
+/* CHART */
+.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.chart-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.chart-head select,.chart-head input{background:var(--card);border:1px solid var(--line);color:var(--text);padding:6px 8px;border-radius:8px;font-size:11px}
+#chart{height:420px}
+.mcp{display:grid;grid-template-columns:1fr 340px;gap:14px}
+@media(max-width:900px){.mcp{grid-template-columns:1fr}}
+.chat{border:1px solid var(--line);border-radius:14px;background:var(--panel);display:flex;flex-direction:column;height:420px;overflow:hidden}
+.chat-log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+.msg{padding:8px 10px;border-radius:10px;font-size:12px;line-height:1.5;max-width:92%}
+.msg.user{align-self:flex-end;background:var(--gold);color:#000}
+.msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
+.chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:rgba(0,0,0,.2)}
+.chat-in input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:10px;font-size:12px}
+/* TRADE */
+.terminal{display:grid;grid-template-columns:320px 1fr;gap:14px}
+@media(max-width:900px){.terminal{grid-template-columns:1fr}}
+.pos-table{width:100%;border-collapse:collapse;font-size:11px}
+.pos-table th{color:var(--muted);font-weight:600;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);letter-spacing:.06em}
+.pos-table td{padding:8px;border-bottom:1px solid rgba(255,255,255,.06)}
+.pnl-up{color:var(--green)} .pnl-down{color:var(--red)}
+/* BACKTEST */
+.bt-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.bt-chart{height:360px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+/* UTIL */
+.muted{color:var(--muted)}
+.small{font-size:11px}
+.kpi{display:flex;gap:8px;flex-wrap:wrap}
+.kpi b{font-size:12px}
+.sep{height:1px;background:var(--line);margin:10px 0}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:12px;display:none;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-logo">⚒️ <b>FORGE</b>TRADER <span>DEMO • NO REAL MONEY</span></div>
+  <div class="nav-tabs" id="tabs">
+    <div class="nav-tab active" data-view="dash">DASHBOARD</div>
+    <div class="nav-tab" data-view="learn">LEARN</div>
+    <div class="nav-tab" data-view="chart">CHART</div>
+    <div class="nav-tab" data-view="trade">DEMO TRADE</div>
+    <div class="nav-tab" data-view="backtest">BACKTEST</div>
+    <div class="nav-tab" data-view="journal">JOURNAL</div>
+  </div>
+  <div class="nav-right">
+    <div class="hud">LVL <b id="hudLvl">1</b> • <b id="hudXp">0</b> XP</div>
+    <div id="hudRank" class="rank-badge" style="background:#1f1f2a;color:#9ca3af;border:1px solid #2a2a3a">E-RANK</div>
+    <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
+  </div>
+</nav>
+
+<div class="wrap">
+  <!-- DASHBOARD -->
+  <section id="view-dash" class="view active">
+    <div class="hero">
+      <div>
+        <h1>Forge your <b>trader</b> — before you risk a cent.</h1>
+        <p>Game-like path from zero → profitable. Hunter ranks, streaks, quests, TradingView charts, and MT5-style demo execution. Learn, trade, backtest — get addicted to getting better.</p>
+        <div class="statrow">
+          <div class="stat"><b id="sRank">E-RANK</b><span>RANK (E→S)</span></div>
+          <div class="stat"><b id="sLevel">LV 1</b><span>LEVEL</span></div>
+          <div class="stat"><b id="sStreak">0 🔥</b><span>DAY STREAK</span></div>
+          <div class="stat"><b id="sBalance">$10,000</b><span>PAPER BALANCE</span></div>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="switchView('learn')">START LESSON →</button>
+          <button class="btn" onclick="switchView('chart')">OPEN CHART</button>
+          <button class="btn" id="lockInBtn" onclick="lockIn()">🔒 LOCK IN TODAY</button>
+          <span class="small muted" id="lockInInfo">Traders locked in today: <b id="lockedCount">1,247</b> (live • Supabase-ready)</span>
+        </div>
+        <div class="kpi" style="margin-top:10px">
+          <span class="badge badge-gold">TradingView MCP Mock • 37 tools</span>
+          <span class="badge">MT5 DEMO Bridge • Mock</span>
+          <span class="badge">Kronos-style AI Coach</span>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">TODAY'S QUEST <span class="badge" id="questBadge">+50 XP</span></div>
+        <div id="questText" class="small">Complete 1 lesson + place 1 demo trade</div>
+        <div class="progress" style="margin-top:10px"><i id="questProg" style="width:0%"></i></div>
+        <div class="small muted" id="questProgText" style="margin-top:6px">0/2 done</div>
+        <div class="sep"></div>
+        <div class="card-h">BADGES <span class="small muted" id="badgeCount">0/8</span></div>
+        <div id="badgeGrid" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        <div class="sep"></div>
+        <div class="card-h">VOICE COACH</div>
+        <div class="small muted">Newbie-friendly. No jargon without explanation.</div>
+        <div style="margin-top:8px;display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="askCoach('explain support and resistance like I am 12')">Explain S/R</button>
+          <button class="btn btn-sm" onclick="askCoach('why did I lose this trade?')">Why I lost?</button>
+        </div>
+      </div>
+    </div>
+
+    <div style="height:14px"></div>
+    <div class="level-grid" id="levelGrid"></div>
+
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <div class="card-h">FREEDOM MATH <span class="badge">War Room perk</span></div>
+        <div class="grid g2">
+          <label class="small">Daily job pay $ <input id="fmPay" value="80" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+          <label class="small">Lot size <input id="fmLot" value="0.10" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:8px"><button class="btn btn-sm" onclick="calcFreedom()">CALCULATE</button><span id="fmOut" class="small muted" style="align-self:center"></span></div>
+      </div>
+      <div class="card">
+        <div class="card-h">SESSION SENTINEL <span class="badge" id="sessBadge">LIVE</span></div>
+        <div id="sessGrid" class="grid g3"></div>
+        <div class="small muted" id="sessTime" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="view-learn" class="view">
+    <div class="card">
+      <div class="card-h">LEARN PATH — 5 FORGE LEVELS <span class="small muted">Complete quiz to unlock next • +100 XP per lesson</span></div>
+      <div id="learnLevels"></div>
+    </div>
+  </section>
+
+  <!-- CHART -->
+  <section id="view-chart" class="view">
+    <div class="mcp">
+      <div class="chart-wrap">
+        <div class="chart-head">
+          <select id="symSel"><option>XAUUSD</option><option>BTCUSD</option><option>EURUSD</option><option>NAS100</option><option>GER40</option></select>
+          <select id="tfSel"><option value="1">1m</option><option value="5">5m</option><option value="15">15m</option><option value="60" selected>1H</option><option value="240">4H</option><option value="1440">1D</option></select>
+          <label class="small"><input type="checkbox" id="chkSMA" checked> SMA20</label>
+          <label class="small"><input type="checkbox" id="chkBB"> Bollinger</label>
+          <label class="small"><input type="checkbox" id="chkRSI"> RSI</label>
+          <span class="badge" id="priceBadge">$0.00</span>
+          <span class="badge" id="mt5Badge" style="margin-left:auto;border-color:var(--green);color:var(--green)">MT5 DEMO • CONNECTED (MOCK)</span>
+        </div>
+        <div id="chart"></div>
+        <div id="rsiBox" style="display:none;height:90px;border-top:1px solid var(--line)"></div>
+      </div>
+      <div class="chat">
+        <div class="card-h" style="padding:10px 12px;margin:0;border-bottom:1px solid var(--line)">TradingView MCP — ASK ANYTHING <span class="badge badge-gold">37 tools mock</span></div>
+        <div id="chatLog" class="chat-log">
+          <div class="msg bot">Hi, I'm Forge AI (TradingView MCP). Try:<br>• <b>Analyze XAUUSD on 1H</b><br>• <b>Show RSI and Bollinger</b><br>• <b>Backtest MA cross on BTC</b><br>• <b>Top gainers on Binance</b></div>
+        </div>
+        <div class="chat-in"><input id="chatIn" placeholder="Ask: Analyze XAUUSD, backtest RSI..."><button class="btn btn-primary" onclick="sendChat()">ASK</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO TRADE -->
+  <section id="view-trade" class="view">
+    <div class="terminal">
+      <div class="card">
+        <div class="card-h">MT5 DEMO TERMINAL <span class="badge" style="border-color:var(--green);color:var(--green)">PAPER — NO REAL MONEY</span></div>
+        <div class="grid g2">
+          <div class="stat"><b id="tBal">$10,000.00</b><span>BALANCE</span></div>
+          <div class="stat"><b id="tEq">$10,000.00</b><span>EQUITY</span></div>
+        </div>
+        <div style="margin-top:10px" class="small muted">Free margin: <b id="tFree">$10,000.00</b> • Margin level: <b id="tLvl">—</b></div>
+        <div class="sep"></div>
+        <label class="small">Symbol
+          <select id="tSym" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"><option>XAUUSD</option><option>BTCUSD</option><option>EURUSD</option><option>NAS100</option><option>GER40</option></select>
+        </label>
+        <div class="grid g2" style="margin-top:8px">
+          <label class="small">Lots <input id="tLots" value="0.10" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+          <label class="small">Leverage <select id="tLev" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"><option>100</option><option>200</option><option>500</option></select></label>
+        </div>
+        <div class="grid g2" style="margin-top:8px">
+          <label class="small">SL ($) <input id="tSL" placeholder="e.g. 20" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+          <label class="small">TP ($) <input id="tTP" placeholder="e.g. 40" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+          <button class="btn" style="background:var(--green);color:#000;border-color:var(--green);font-weight:900" onclick="placeTrade('long')">BUY / LONG</button>
+          <button class="btn" style="background:var(--red);color:#fff;border-color:var(--red);font-weight:900" onclick="placeTrade('short')">SELL / SHORT</button>
+        </div>
+        <div class="small muted" style="margin-top:8px">Spread mock 1.2 pips • Commission $0 • Instant execution (mock MT5)</div>
+      </div>
+      <div class="card">
+        <div class="card-h">OPEN POSITIONS <span class="badge" id="posCount">0</span></div>
+        <div style="overflow:auto">
+          <table class="pos-table" id="posTable">
+            <thead><tr><th>Ticket</th><th>Symbol</th><th>Type</th><th>Lots</th><th>Open</th><th>Price</th><th>P/L</th><th></th></tr></thead>
+            <tbody id="posBody"><tr><td colspan="8" class="muted" style="text-align:center;padding:18px">No open positions — place a demo trade to start.</td></tr></tbody>
+          </table>
+        </div>
+        <div class="sep"></div>
+        <div class="card-h">CLOSED HISTORY</div>
+        <div style="overflow:auto;max-height:220px">
+          <table class="pos-table"><thead><tr><th>Time</th><th>Symbol</th><th>Type</th><th>P/L</th><th>XP</th></tr></thead><tbody id="histBody"><tr><td colspan="5" class="muted" style="text-align:center;padding:12px">No history yet.</td></tr></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BACKTEST -->
+  <section id="view-backtest" class="view">
+    <div class="card">
+      <div class="card-h">BACKTEST LAB — TradingView MCP Backtesting (mock) <span class="badge badge-gold">Try: RSI, MA Cross, Bollinger</span></div>
+      <div class="bt-controls">
+        <select id="btSym"><option>XAUUSD</option><option>BTCUSD</option><option>EURUSD</option></select>
+        <select id="btTF"><option value="60">1H</option><option value="240">4H</option><option value="1440">1D</option></select>
+        <select id="btStrat"><option value="sma">SMA Cross (20/50)</option><option value="rsi">RSI 30/70</option><option value="bb">Bollinger Revert</option></select>
+        <button class="btn btn-primary" onclick="runBacktest()">RUN BACKTEST</button>
+        <button class="btn" onclick="btPlay()">▶ PLAY</button>
+        <button class="btn" onclick="btPause()">⏸ PAUSE</button>
+        <button class="btn" onclick="btStep()">⏭ STEP</button>
+        <span class="small muted" id="btStats" style="margin-left:auto"></span>
+      </div>
+      <div style="height:10px"></div>
+      <div id="btChart" class="bt-chart"></div>
+      <div class="grid g3" style="margin-top:12px">
+        <div class="stat"><b id="btWin">—</b><span>WIN RATE</span></div>
+        <div class="stat"><b id="btPf">—</b><span>PROFIT FACTOR</span></div>
+        <div class="stat"><b id="btRet">—</b><span>RETURN (paper)</span></div>
+      </div>
+      <div id="btTrades" class="small muted" style="margin-top:8px;max-height:120px;overflow:auto"></div>
+    </div>
+  </section>
+
+  <!-- JOURNAL -->
+  <section id="view-journal" class="view">
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h">PROGRESSION <span class="badge" id="jRank">E-RANK</span></div>
+        <div class="progress"><i id="jProg"></i></div>
+        <div class="small muted" id="jProgText" style="margin-top:6px"></div>
+        <div class="sep"></div>
+        <div id="jStats" class="small" style="line-height:1.8"></div>
+      </div>
+      <div class="card">
+        <div class="card-h">EXPORT <span class="small muted">PWA-ready • localStorage</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportData()">EXPORT JSON</button><button class="btn" onclick="resetAll()">RESET (keep rank?)</button></div>
+        <div class="small muted" style="margin-top:8px">Cloud sync (Supabase) ready to plug: same pattern as HabitOS `forgetrader_data` table.</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-h">TRADE LOG — All paper trades</div>
+      <div style="overflow:auto"><table class="pos-table"><thead><tr><th>Date</th><th>Symbol</th><th>Type</th><th>Lots</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Note</th></tr></thead><tbody id="journalBody"></tbody></table></div>
+    </div>
+  </section>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// --- STORE ---
+const LS_KEY='forgetrader_v1';
+const RANK_TABLE=[
+  {rank:'E',label:'E-RANK',min:0,color:'#6b7280',next:500},
+  {rank:'D',label:'D-RANK',min:500,color:'#10b981',next:1500},
+  {rank:'C',label:'C-RANK',min:1500,color:'#3b82f6',next:3000},
+  {rank:'B',label:'B-RANK',min:3000,color:'#8b5cf6',next:5000},
+  {rank:'A',label:'A-RANK',min:5000,color:'#f59e0b',next:8000},
+  {rank:'S',label:'S-RANK',min:8000,color:'#ff2e63',next:Infinity},
+];
+function getRank(xp){for(let i=RANK_TABLE.length-1;i>=0;i--) if(xp>=RANK_TABLE[i].min) return RANK_TABLE[i]; return RANK_TABLE[0]}
+function getNextRank(xp){const r=getRank(xp); const idx=RANK_TABLE.findIndex(x=>x.rank===r.rank); return RANK_TABLE[idx+1]||null}
+const defaultStore={xp:0,level:1,streak:0,lastLockIn:null,quests:{done:0},badges:[],lessonsDone:{},balance:10000,equity:10000,trades:[],history:[],lockedCount:1247};
+let store=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY)); return s?{...defaultStore,...s}: {...defaultStore}}catch{return {...defaultStore}}}
+function save(){localStorage.setItem(LS_KEY, JSON.stringify(store))}
+function addXp(n,reason){store.xp+=n;updateHud();save();toast(`+${n} XP — ${reason}`);checkBadges();checkQuest()}
+function updateHud(){
+  const r=getRank(store.xp); const nxt=getNextRank(store.xp);
+  const pct = nxt ? ((store.xp - r.min)/(nxt.min - r.min))*100 : 100;
+  document.getElementById('hudXp').textContent=store.xp;
+  const lvl = Math.floor(store.xp/400)+1; store.level=lvl;
+  document.getElementById('hudLvl').textContent=lvl;
+  document.getElementById('sRank').textContent=r.label; document.getElementById('sLevel').textContent='LV '+lvl;
+  document.getElementById('sStreak').textContent=store.streak+' 🔥';
+  document.getElementById('sBalance').textContent='$'+store.balance.toFixed(2);
+  const rb=document.getElementById('hudRank'); rb.textContent=r.label; rb.style.color=r.color; rb.style.borderColor=r.color; rb.style.background='rgba(255,255,255,.06)';
+  document.getElementById('xpFill').style.width=Math.min(100,pct)+'%';
+  // journal
+  const jr=document.getElementById('jRank'); if(jr){jr.textContent=r.label; jr.style.color=r.color; jr.style.borderColor=r.color}
+  const jp=document.getElementById('jProg'); if(jp) jp.style.width=Math.min(100,pct)+'%';
+  const jt=document.getElementById('jProgText'); if(jt) jt.textContent = nxt ? `${store.xp - r.min} / ${nxt.min - r.min} XP to ${nxt.label}` : `MAX RANK ${r.label} — ${store.xp} XP`;
+  document.getElementById('tBal').textContent='$'+store.balance.toFixed(2);
+  document.getElementById('tEq').textContent='$'+store.equity.toFixed(2);
+  document.getElementById('tFree').textContent='$'+store.equity.toFixed(2);
+  updateQuestUI();
+}
+function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2200)}
+
+// --- LEVELS ---
+const LEVELS=[
+  {id:1,title:'Level 1 — First Steps',desc:'What is trading? Markets, demo vs real, why 90% lose.',color:'#f59e0b',lessons:['What is a market?','Demo vs Real money','The 1% risk rule'],xp:100},
+  {id:2,title:'Level 2 — Charts',desc:'Candles, timeframe, support/resistance, trend.',color:'#3b82f6',lessons:['Candlesticks decoded','Timeframes','S/R + Trendlines'],xp:100},
+  {id:3,title:'Level 3 — Risk',desc:'Position size, stop loss, RR, journal.',color:'#10b981',lessons:['Lot size math','Stop & Take Profit','Risk/Reward 1:2+'],xp:100},
+  {id:4,title:'Level 4 — Strategy',desc:'RSI, MA, Bollinger — build your first edge.',color:'#8b5cf6',lessons:['RSI 30/70','MA Cross','Bollinger Bands'],xp:100},
+  {id:5,title:'Level 5 — Boss Battle',desc:'Backtest, forward-test, stay alive 20 trades.',color:'#ff2e63',lessons:['Your first backtest','Forward test demo','Boss: 10 R in profit'],xp:200},
+];
+function renderLevels(){
+  const g=document.getElementById('levelGrid'); g.innerHTML='';
+  LEVELS.forEach(l=>{
+    const locked = store.xp < (l.id-1)*320;
+    const doneLessons = l.lessons.filter((_,i)=> store.lessonsDone[`${l.id}-${i}`]).length;
+    const pct = (doneLessons/l.lessons.length)*100;
+    const d=document.createElement('div'); d.className='level'+(locked?' locked':'');
+    d.innerHTML=`<div class="level-head" style="background:linear-gradient(135deg, ${l.color}, #0a0a0c)"><div class="level-num">LV ${l.id} • ${l.xp} XP</div><div style="font-size:22px">⚒️</div></div><div class="level-body"><h3>${l.title}</h3><p>${l.desc}</p><div class="level-meta"><span class="badge">${l.lessons.length} lessons</span><span class="badge ${doneLessons? 'badge-gold':''}">${doneLessons}/${l.lessons.length} done</span></div><div class="progress"><i style="width:${pct}%"></i></div><div style="margin-top:8px"><button class="btn btn-sm ${locked?'': 'btn-primary'}" onclick="switchView('learn');openLevel(${l.id})" ${locked?'disabled':''}>${locked?'LOCKED — '+((l.id-1)*320)+' XP needed':'ENTER FORGE →'}</button></div></div>`;
+    g.appendChild(d);
+  })
+}
+function renderLearn(){
+  const c=document.getElementById('learnLevels'); c.innerHTML='';
+  LEVELS.forEach(l=>{
+    const locked = store.xp < (l.id-1)*320;
+    const div=document.createElement('div');
+    div.innerHTML=`<div class="card-h" style="margin-top:12px">${l.title} — <span class="muted">${l.desc}</span> ${locked?'<span class="badge">LOCKED</span>':''}</div><div class="lesson-list" id="ll-${l.id}"></div>`;
+    c.appendChild(div);
+    const list=div.querySelector(`#ll-${l.id}`);
+    l.lessons.forEach((title,idx)=>{
+      const key=`${l.id}-${idx}`; const done=store.lessonsDone[key];
+      const prevDone = idx===0 || store.lessonsDone[`${l.id}-${idx-1}`];
+      const isLocked = locked || !prevDone;
+      const el=document.createElement('div'); el.className='lesson'+(done?' done':'')+(isLocked?' locked':'');
+      el.innerHTML=`<div class="lesson-icon">${done?'✓': '📖'}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${title}</div><div class="small muted">${done? 'Completed +100 XP' : isLocked? 'Complete previous lesson first' : 'Tap to study'}</div></div><span class="badge">${done? 'DONE':'+100 XP'}</span>`;
+      el.onclick=()=>{ if(isLocked) return toast('Complete previous lesson first'); openLesson(l.id,idx,title)};
+      list.appendChild(el);
+    });
+    // quiz gate
+    const allDone = l.lessons.every((_,i)=> store.lessonsDone[`${l.id}-${i}`]);
+    if(allDone){
+      const q=document.createElement('div'); q.className='quiz'; q.style.marginTop='8px';
+      q.innerHTML=`<h4>⚔️ Level ${l.id} Trial — pass to keep XP (mock quiz)</h4><div class="q"><p><b>Q:</b> ${quizQ(l.id)}</p><div class="q-opts" id="q-${l.id}"></div><div id="qr-${l.id}" class="small muted" style="margin-top:8px"></div></div>`;
+      c.appendChild(q);
+      setTimeout(()=>renderQuiz(l.id),0);
+    }
+  })
+}
+const QUIZ=[
+  {q:'What should you risk per trade as a beginner?',opts:['10% of account','1% or less','50% if confident'],a:1},
+  {q:'A bullish candle close means?',opts:['Buyers won that period','Sellers won','Nothing'],a:0},
+  {q:'Best place for stop loss?',opts:['Random','Beyond structure / invalidation','At entry'],a:1},
+  {q:'RSI above 70 suggests?',opts:['Oversold (buy)','Overbought (caution)','Guaranteed up'],a:1},
+  {q:'What proves an edge?',opts:['One win','20+ trades + backtest','A YouTube signal'],a:1},
+];
+function quizQ(id){return QUIZ[id-1].q}
+function renderQuiz(id){
+  const data=QUIZ[id-1]; const box=document.getElementById(`q-${id}`); if(!box) return;
+  box.innerHTML=''; data.opts.forEach((o,i)=>{
+    const b=document.createElement('button'); b.textContent=o;
+    b.onclick=()=>{
+      const r=document.getElementById(`qr-${id}`);
+      if(i===data.a){b.classList.add('correct'); r.textContent='✓ Correct — +50 XP bonus'; r.style.color='var(--green)'; addXp(50,`Level ${id} trial`)}
+      else {b.classList.add('wrong'); r.textContent='✗ Try again — hint: re-read the lesson'; r.style.color='var(--red)'}
+    };
+    box.appendChild(b);
+  })
+}
+let activeLesson=null;
+function openLevel(id){ // scroll to that level in learn view
+  renderLearn(); setTimeout(()=>{document.querySelector(`#learnLevels > div:nth-child(${id})`)?.scrollIntoView({behavior:'smooth'})},100)
+}
+function openLesson(lid,idx,title){
+  activeLesson=`${lid}-${idx}`;
+  const content={
+    'What is a market?': 'A market is where buyers and sellers agree on price. Forex = currencies, Crypto = coins, Indices = baskets of stocks. Price moves because of imbalance — more buyers than sellers → up.',
+    'Demo vs Real money': 'Demo = paper money, same price as real, zero risk. ForgeTrader is DEMO ONLY. You learn execution, risk, emotions — before real capital.',
+    'The 1% risk rule': 'Never risk more than 1% per trade. $10k account → max $100 loss per trade. This lets you survive 20 losses and still trade. Pros survive first, profit second.',
+    'Candlesticks decoded': 'Each candle = open/high/low/close for that timeframe. Green = buyers won, Red = sellers won. Wicks = rejection.',
+    'Timeframes': '1m = noise, 1H = intraday, 1D = trend. Beginners: stick to 1H/4H/1D. Lower TF = more fakeouts.',
+    'S/R + Trendlines': 'Support = floor buyers defend, Resistance = ceiling sellers defend. Trendline connects higher lows (uptrend). Break + retest = signal.',
+    'Lot size math': 'Lot size = risk $ / (stop distance * pip value). ForgeTrader auto-calcs if you enter SL $. Don’t guess size.',
+    'Stop & Take Profit': 'Stop = where you are wrong (beyond structure). Take profit = 2x your risk (1:2 RR). Let winners run.',
+    'Risk/Reward 1:2+': 'Risk $10 to make $20+. One win erases two losses. Edge = RR + win rate. 40% wins at 1:2 = profitable.',
+    'RSI 30/70': 'RSI = momentum 0-100. <30 oversold (bounce may come), >70 overbought (pullback risk). Not a signal alone — confirm with price structure.',
+    'MA Cross': 'SMA20 above SMA50 = uptrend bias, below = downtrend. Cross = early trend hint. Use with S/R, not alone.',
+    'Bollinger Bands': 'Middle = SMA20, outer = volatility. Price hugging upper = strong trend or overbought, at lower = oversold. Squeeze = breakout coming.',
+    'Your first backtest': 'Backtest = test strategy on past data. Does it win? ForgeTrader backtest lab runs SMA/RSI/Bollinger on 500 candles — see win rate instantly.',
+    'Forward test demo': 'Forward test = trade live demo for 20 trades without tweaking. If backtest + forward match, you have an edge.',
+    'Boss: 10 R in profit': 'Boss challenge: make 10R (10x your risk) in paper P/L. If you risk $10/trade, need $100 profit. Takes discipline, not luck.',
+  }[title]||'Lesson content — practice on chart after reading.';
+  const w=document.createElement('div'); w.style.position='fixed';w.style.inset='0';w.style.background='rgba(0,0,0,.6)';w.style.display='grid';w.style.placeItems='center';w.style.zIndex='60';w.id='lessonModal';
+  w.innerHTML=`<div class="card" style="max-width:560px;width:92%"><div class="card-h">${title} <button class="btn btn-sm" onclick="closeLesson()">✕</button></div><p class="small" style="line-height:1.7">${content}</p><div class="sep"></div><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="completeLesson()">MARK DONE +100 XP</button><button class="btn" onclick="closeLesson()">Close</button><button class="btn" onclick="closeLesson();switchView('chart')">OPEN CHART</button></div></div>`;
+  w.onclick=(e)=>{ if(e.target===w) closeLesson()};
+  document.body.appendChild(w);
+}
+function closeLesson(){const m=document.getElementById('lessonModal'); if(m) m.remove()}
+function completeLesson(){
+  if(!activeLesson) return;
+  if(store.lessonsDone[activeLesson]) {toast('Already completed'); closeLesson(); return}
+  store.lessonsDone[activeLesson]=true; save(); addXp(100,`Lesson ${activeLesson}`);
+  closeLesson(); renderLevels(); renderLearn(); updateHud(); checkQuest();
+}
+
+// --- CHART (lightweight-charts) ---
+let chart, candleSeries, smaSeries, bbU, bbL, volumeSeries, rsiChart, rsiSeries;
+let candles=[];
+function genCandles(n=300, start=2650){
+  const arr=[]; let t=Math.floor(Date.now()/1000)-n*3600; let p=start;
+  for(let i=0;i<n;i++){ const vol=Math.random(); const drift=(Math.random()-.48)*4; p+=drift; const o=p; const h=o+Math.random()*6; const l=o-Math.random()*6; const c=l+Math.random()*(h-l); arr.push({time:t+i*3600, open:o, high:Math.max(o,c,h), low:Math.min(o,c,l), close:c}); p=c; }
+  return arr;
+}
+function sma(data, period){ return data.map((_,i)=>{ if(i<period-1) return null; let s=0; for(let j=0;j<period;j++) s+=data[i-j].close; return s/period }) }
+function bollinger(data, period=20, mult=2){
+  const outU=[], outL=[]; for(let i=0;i<data.length;i++){ if(i<period-1){outU.push(null); outL.push(null); continue} let sum=0; for(let j=0;j<period;j++) sum+=data[i-j].close; const ma=sum/period; let varSum=0; for(let j=0;j<period;j++) varSum+=Math.pow(data[i-j].close-ma,2); const sd=Math.sqrt(varSum/period); outU.push(ma+mult*sd); outL.push(ma-mult*sd); }
+  return {ma:sma(data,20), up:outU, low:outL}
+}
+function rsi(data, period=14){
+  let gains=0, losses=0; const out=[]; for(let i=1;i<data.length;i++){ const diff=data[i].close-data[i-1].close; if(i<=period){ if(diff>0) gains+=diff; else losses+=-diff; if(i<period){out.push(null); continue} gains/=period; losses/=period; } else { if(diff>0){ gains=(gains*(period-1)+diff)/period; losses=(losses*(period-1))/period } else { gains=(gains*(period-1))/period; losses=(losses*(period-1)+-diff)/period } } const rs = losses===0? 100 : gains/losses; out.push(100 - (100/(1+rs)) ) }
+  // align length
+  const aligned=[null,...out]; while(aligned.length < data.length) aligned.unshift(null); return aligned.slice(-data.length);
+}
+function initChart(){
+  candles=genCandles(400, parseFloat(document.getElementById('tSym')?.value==='BTCUSD'? 67000 : 2650));
+  const el=document.getElementById('chart'); el.innerHTML='';
+  chart=LightweightCharts.createChart(el,{layout:{background:{color:'#12121a'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{timeVisible:true, secondsVisible:false},rightPriceScale:{borderColor:'#26263a'}});
+  candleSeries=chart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderVisible:false,wickUpColor:'#10b981',wickDownColor:'#ef4444'});
+  candleSeries.setData(candles);
+  smaSeries=chart.addLineSeries({color:'#f59e0b',lineWidth:1}); updateIndicators();
+  bbU=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1}); bbL=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1});
+  chart.timeScale().fitContent();
+  // rsi sub
+  const rsiEl=document.getElementById('rsiBox'); if(rsiEl){ rsiChart=LightweightCharts.createChart(rsiEl,{layout:{background:{color:'#0f0f17'},textColor:'#6b7280'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{visible:false},height:90}); rsiSeries=rsiChart.addLineSeries({color:'#8b5cf6',lineWidth:1}); }
+  // price ticker
+  setInterval(()=>tickPrice(), 1200);
+  window.addEventListener('resize',()=>{ chart.applyOptions({width: el.clientWidth}); if(rsiChart) rsiChart.applyOptions({width: rsiEl.clientWidth}) });
+}
+function updateIndicators(){
+  const showSMA=document.getElementById('chkSMA').checked;
+  const showBB=document.getElementById('chkBB').checked;
+  const showRSI=document.getElementById('chkRSI').checked;
+  const s=sma(candles,20); const bb=bollinger(candles,20,2);
+  const smaData=s.map((v,i)=> v===null? null : {time:candles[i].time, value:v}).filter(Boolean);
+  smaSeries.setData(showSMA? smaData : []);
+  bbU.setData(showBB? bb.up.map((v,i)=> v===null? null: {time:candles[i].time,value:v}).filter(Boolean):[]);
+  bbL.setData(showBB? bb.low.map((v,i)=> v===null? null: {time:candles[i].time,value:v}).filter(Boolean):[]);
+  document.getElementById('rsiBox').style.display= showRSI? 'block':'none';
+  if(showRSI && rsiSeries){ const rv=rsi(candles,14); const d=rv.map((v,i)=> v===null? null: {time:candles[i].time,value:v}).filter(Boolean); rsiSeries.setData(d); if(rsiChart) rsiChart.timeScale().setVisibleRange(chart.timeScale().getVisibleRange()) }
+}
+['chkSMA','chkBB','chkRSI'].forEach(id=> document.getElementById(id).addEventListener('change',updateIndicators));
+function tickPrice(){
+  if(!candles.length || !candleSeries) return;
+  const last=candles[candles.length-1];
+  const drift=(Math.random()-.5)* (last.close>60000? 50:3);
+  const nc={time:last.time+60, open:last.close, high:Math.max(last.close,last.close+drift+Math.random()*2), low:Math.min(last.close,last.close+drift-Math.random()*2), close:last.close+drift};
+  // update last candle instead of new for smooth
+  const updated={...last, close: last.close+drift*0.3, high: Math.max(last.high, last.close+drift), low: Math.min(last.low, last.close+drift)};
+  candles[candles.length-1]=updated;
+  candleSeries.update(updated);
+  document.getElementById('priceBadge').textContent='$'+updated.close.toFixed(2);
+  // update equity with open positions
+  updateEquity(updated.close);
+  if(document.getElementById('rsiBox').style.display!=='none') updateIndicators();
+}
+
+// --- MCP CHAT MOCK ---
+function sendChat(){
+  const inp=document.getElementById('chatIn'); const q=inp.value.trim(); if(!q) return;
+  addChat('user', q); inp.value='';
+  setTimeout(()=> addChat('bot', mcpReply(q)), 400);
+}
+document.getElementById('chatIn')?.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat()});
+function addChat(who, text){
+  const log=document.getElementById('chatLog'); const d=document.createElement('div'); d.className='msg '+(who==='user'?'user':'bot'); d.innerHTML=text; log.appendChild(d); log.scrollTop=log.scrollHeight;
+}
+function mcpReply(q){
+  const lower=q.toLowerCase(); const last=candles[candles.length-1]; const price=last? last.close.toFixed(2):'—';
+  if(lower.includes('rsi')) return `<b>RSI (14) mock:</b> ${ (Math.random()*40+30).toFixed(1)} — ${Math.random()>.5? 'Neutral, wait for structure':'Near 68, avoid chasing'} <br><span class="muted small">Tool: tradingview-mcp • rsi(${document.getElementById('symSel').value} 1H)</span>`;
+  if(lower.includes('bollinger')||lower.includes('bb')) return `<b>Bollinger (20,2) mock:</b> Upper ${(parseFloat(price)+12).toFixed(2)} / Lower ${(parseFloat(price)-12).toFixed(2)} • Price is <b>${Math.random()>.5? 'inside bands — squeeze':'near upper — pullback risk'}</b> <br><span class="muted small">MCP App chart would render here (hosted TradingView MCP)</span>`;
+  if(lower.includes('backtest')){
+    const strat= lower.includes('rsi')? 'RSI 30/70': lower.includes('ma')? 'SMA Cross':'SMA Cross';
+    return `<b>Backtest ${strat} on ${document.getElementById('symSel').value} 1D (mock):</b> 500 candles • 42 trades • Win 54% • PF 1.4 • +8.2R <br>Run full backtest in <b>Backtest Lab → Run</b>. <span class="muted small">Tool: tradingview-mcp • backtest</span>`;
+  }
+  if(lower.includes('top')||lower.includes('gainer')||lower.includes('screener')) return `<b>Top gainers (Binance mock):</b><br>1. PEPE +12.4% • RSI 67<br>2. SOL +8.1% • RSI 62<br>3. BTC +2.3% • RSI 58 <br><span class="muted small">Tool: tradingview-mcp • screener</span>`;
+  if(lower.includes('gold')||lower.includes('xau')) return `<b>Multi-Timeframe XAUUSD (mock):</b><br>W: bullish • D: bullish • 4H: pullback • 1H: coiling • <b>Verdict: LEAN BULLISH — wait long on 1H break</b> <br><span class="muted small">Tool: tradingview-mcp • mtf-analysis</span>`;
+  if(lower.includes('analyze')||lower.includes('analysis')) return `<b>Technical Analysis ${document.getElementById('symSel').value} 1H:</b> Price $${price} • SMA20 ${ (parseFloat(price)- (Math.random()*10-5)).toFixed(2)} • RSI ${(Math.random()*30+40).toFixed(0)} • Structure: ${Math.random()>.5? 'Higher lows intact':'Range, no trend'} <br>Do you want me to <b>overlay Bollinger</b> or <b>run a backtest</b>?`;
+  return `<b>Forge AI:</b> I can run 37 TradingView tools (mock). Try:<br>• <i>Analyze ${document.getElementById('symSel').value} on 1H</i><br>• <i>Show Bollinger + RSI</i><br>• <i>Backtest MA cross on BTC daily</i><br>Current price: $${price}`;
+}
+function askCoach(prompt){ switchView('chart'); setTimeout(()=>{ document.getElementById('chatIn').value=prompt; sendChat()},300)}
+
+// --- MT5 DEMO TRADE (mock) ---
+let ticketSeq=1001;
+function placeTrade(dir){
+  const sym=document.getElementById('tSym').value;
+  const lots=parseFloat(document.getElementById('tLots').value)||0.1;
+  if(lots<=0) return toast('Lots must be >0');
+  const price=parseFloat(document.getElementById('priceBadge').textContent.replace('$',''))|| candles[candles.length-1].close;
+  const sl=parseFloat(document.getElementById('tSL').value)||0; const tp=parseFloat(document.getElementById('tTP').value)||0;
+  const t={ticket: ticketSeq++, symbol:sym, dir, lots, open: price, cur:price, sl,tp, time: new Date().toLocaleString(), pnl:0};
+  store.trades.push(t); save(); renderTrades(); addXp(10,`Demo ${dir} ${sym}`); toast(`${dir.toUpperCase()} ${lots} ${sym} @ ${price.toFixed(2)} — Ticket #${t.ticket}`);
+  checkQuestTrades();
+}
+function renderTrades(){
+  const body=document.getElementById('posBody'); const hist=document.getElementById('histBody');
+  const jbody=document.getElementById('journalBody');
+  // positions
+  if(!store.trades.length) body.innerHTML=`<tr><td colspan="8" class="muted" style="text-align:center;padding:18px">No open positions — place a demo trade to start.</td></tr>`;
+  else body.innerHTML= store.trades.map(t=>`<tr><td>#${t.ticket}</td><td>${t.symbol}</td><td>${t.dir==='long'?'BUY':'SELL'}</td><td>${t.lots}</td><td>${t.open.toFixed(2)}</td><td>${t.cur.toFixed(2)}</td><td class="${t.pnl>=0?'pnl-up':'pnl-down'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(2)}</td><td><button class="btn btn-sm" onclick="closeTrade(${t.ticket})">CLOSE</button></td></tr>`).join('');
+  document.getElementById('posCount').textContent=store.trades.length;
+  // history
+  if(!store.history.length) hist.innerHTML=`<tr><td colspan="5" class="muted" style="text-align:center;padding:12px">No history yet.</td></tr>`;
+  else hist.innerHTML= store.history.slice(-20).reverse().map(h=>`<tr><td>${h.time}</td><td>${h.symbol}</td><td>${h.dir}</td><td class="${h.pnl>=0?'pnl-up':'pnl-down'}">${h.pnl>=0?'+':''}${h.pnl.toFixed(2)}</td><td>+${h.xp}</td></tr>`).join('');
+  // journal
+  if(jbody){
+    const all=[...store.history].reverse();
+    jbody.innerHTML = all.length? all.map(h=>`<tr><td>${h.time}</td><td>${h.symbol}</td><td>${h.dir}</td><td>${h.lots||'—'}</td><td>${h.open?.toFixed(2)||'—'}</td><td>${h.close?.toFixed(2)||'—'}</td><td class="${h.pnl>=0?'pnl-up':'pnl-down'}">${h.pnl>=0?'+':''}${h.pnl.toFixed(2)}</td><td class="muted">${h.note||''}</td></tr>`).join('') : `<tr><td colspan="8" class="muted" style="text-align:center;padding:14px">No trades yet — your paper P/L will appear here.</td></tr>`;
+    document.getElementById('jStats').innerHTML=`Trades: <b>${store.history.length}</b> • Open: <b>${store.trades.length}</b> • Balance: <b>$${store.balance.toFixed(2)}</b> • XP: <b>${store.xp}</b> • Streak: <b>${store.streak}</b>`;
+  }
+  document.getElementById('sBalance').textContent='$'+store.balance.toFixed(2);
+}
+function closeTrade(ticket){
+  const idx=store.trades.findIndex(t=>t.ticket===ticket); if(idx<0) return;
+  const t=store.trades[idx];
+  // simulate close price with small move
+  const close = t.cur + (Math.random()-.5)* (t.symbol==='BTCUSD'? 200:8) * (t.dir==='long'?1:-1);
+  const diff = t.dir==='long'? (close - t.open) : (t.open - close);
+  // convert diff to P/L mock: diff * lots * 100 (for XAU) or *1 for BTC etc
+  const mult = t.symbol==='BTCUSD'? 1 : t.symbol==='XAUUSD'? 10 : 10;
+  const pnl = diff * t.lots * mult;
+  store.balance += pnl; store.equity = store.balance;
+  const xpBonus = pnl>0? 20:5;
+  store.history.push({ticket:t.ticket, symbol:t.symbol, dir:t.dir, lots:t.lots, open:t.open, close, pnl, time:new Date().toLocaleString(), note: pnl>0? 'Good RR':'Review SL', xp:xpBonus});
+  store.trades.splice(idx,1); save(); renderTrades(); updateHud(); addXp(xpBonus, pnl>0? 'Winning trade':'Trade closed');
+  toast(`Closed #${ticket} ${pnl>=0?'+':''}${pnl.toFixed(2)} — ${pnl>0? 'Nice!':'Review in Journal'}`);
+}
+function updateEquity(curPrice){
+  let floating=0;
+  store.trades.forEach(t=>{
+    const diff = t.dir==='long'? (curPrice - t.open) : (t.open - curPrice);
+    const mult = t.symbol==='BTCUSD'? 1 : 10;
+    // approximate if symbol mismatch, use smaller mult
+    const pnl = diff * t.lots * (t.symbol===document.getElementById('tSym').value? mult : 10);
+    t.cur=curPrice; t.pnl=pnl; floating+=pnl;
+  });
+  store.equity = store.balance + floating;
+  if(store.trades.length) renderTrades();
+}
+
+// --- BACKTEST ---
+let btChart, btSeries, btTimer=null, btIdx=120;
+let btCandles=[];
+function initBacktest(){
+  btCandles=genCandles(500, document.getElementById('btSym').value==='BTCUSD'? 65000: 2650);
+  const el=document.getElementById('btChart'); el.innerHTML='';
+  btChart=LightweightCharts.createChart(el,{layout:{background:{color:'#12121a'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},height:360});
+  btSeries=btChart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderVisible:false});
+  btSeries.setData(btCandles.slice(0,btIdx));
+  btChart.timeScale().fitContent();
+  window.addEventListener('resize',()=> btChart.applyOptions({width: el.clientWidth}));
+}
+function runBacktest(){
+  const strat=document.getElementById('btStrat').value;
+  // simple backtest simulation on full data
+  let trades=[]; let equity=0; let wins=0;
+  const closes=btCandles.map(c=>c.close);
+  for(let i=50;i<closes.length-1;i++){
+    let signal=null;
+    if(strat==='sma'){ const s20=closes.slice(i-19,i+1).reduce((a,b)=>a+b,0)/20; const s50=closes.slice(i-49,i+1).reduce((a,b)=>a+b,0)/50; const p20=closes.slice(i-20,i).reduce((a,b)=>a+b,0)/20; const p50=closes.slice(i-50,i).reduce((a,b)=>a+b,0)/50; if(p20<=p50 && s20>s50) signal='long'; if(p20>=p50 && s20<s50) signal='short' }
+    if(strat==='rsi'){ const rv=rsi(btCandles.slice(0,i+1),14); const v=rv[rv.length-1]; if(v!==null){ if(v<30) signal='long'; if(v>70) signal='short' } }
+    if(strat==='bb'){ const bb=bollinger(btCandles.slice(0,i+1),20,2); const up=bb.up[bb.up.length-1]; const lo=bb.low[bb.low.length-1]; const c=closes[i]; if(c<lo) signal='long'; if(c>up) signal='short' }
+    if(signal){ const entry=closes[i]; const exit=closes[i+5]||entry; const pnl = signal==='long'? (exit-entry): (entry-exit); const mult=10; const rPnl = pnl*0.1*mult; trades.push({i,signal,entry,exit,pnl:rPnl}); equity+=rPnl; if(rPnl>0) wins++; i+=5; }
+  }
+  const winRate = trades.length? (wins/trades.length*100).toFixed(1)+'%':'0%';
+  const pf = (()=>{ let g=0,l=0; trades.forEach(t=> t.pnl>0? g+=t.pnl : l+=-t.pnl); return l? (g/l).toFixed(2): g? '∞':'—' })();
+  document.getElementById('btWin').textContent=winRate; document.getElementById('btPf').textContent=pf; document.getElementById('btRet').textContent= (equity>=0? '+':'')+equity.toFixed(2)+' $ (paper)';
+  document.getElementById('btStats').textContent=`${trades.length} trades • ${winRate} WR`;
+  document.getElementById('btTrades').innerHTML= trades.slice(-10).map(t=>`#${t.i} ${t.signal.toUpperCase()} ${t.entry.toFixed(2)}→${t.exit.toFixed(2)} <span class="${t.pnl>=0?'pnl-up':'pnl-down'}">${t.pnl>=0?'+':''}${t.pnl.toFixed(2)}</span>`).join(' • ');
+  // show all candles
+  btSeries.setData(btCandles);
+  addXp(50,`Backtest ${strat} — ${trades.length} trades`);
+  toast(`Backtest done — ${trades.length} trades, ${winRate} WR`);
+  // add markers
+  const markers=trades.slice(0,30).map(t=>({time: btCandles[t.i].time, position: t.signal==='long'?'belowBar':'aboveBar', color: t.pnl>=0?'#10b981':'#ef4444', shape: t.signal==='long'?'arrowUp':'arrowDown', text: t.signal==='long'?'BUY':'SELL'}));
+  btSeries.setMarkers(markers);
+}
+function btPlay(){ if(btTimer) return; btTimer=setInterval(()=>{ if(btIdx>=btCandles.length) {btPause(); return} btIdx++; btSeries.setData(btCandles.slice(0,btIdx)); }, 120)}
+function btPause(){ clearInterval(btTimer); btTimer=null}
+function btStep(){ if(btIdx<btCandles.length){ btIdx++; btSeries.setData(btCandles.slice(0,btIdx)) }}
+
+// --- GAMIFICATION ---
+function checkBadges(){
+  const defs=[
+    {id:'first_lesson',label:'First Lesson',need:()=> Object.keys(store.lessonsDone).length>=1},
+    {id:'level2',label:'Level 2 Unlocked',need:()=> store.xp>=320},
+    {id:'first_trade',label:'First Trade',need:()=> store.history.length>=1},
+    {id:'ten_trades',label:'10 Trades',need:()=> store.history.length>=10},
+    {id:'backtester',label:'Backtester',need:()=> store.xp>=500},
+    {id:'streak3',label:'3-Day Streak',need:()=> store.streak>=3},
+    {id:'profit',label:'In Profit',need:()=> store.balance>10000},
+    {id:'rankC',label:'C-Rank',need:()=> getRank(store.xp).rank==='C'||['B','A','S'].includes(getRank(store.xp).rank)},
+  ];
+  defs.forEach(d=>{ if(!store.badges.includes(d.id) && d.need()){ store.badges.push(d.id); save(); toast(`🏆 Badge unlocked: ${d.label}`)}});
+  renderBadges();
+}
+function renderBadges(){
+  const grid=document.getElementById('badgeGrid'); const defs={first_lesson:'📘',level2:'🔓',first_trade:'⚔️',ten_trades:'⚒️',backtester:'📈',streak3:'🔥',profit:'💰',rankC:'🏅'};
+  grid.innerHTML= store.badges.length? store.badges.map(b=>`<span class="badge badge-gold">${defs[b]||'🏆'} ${b}</span>`).join('') : `<span class="small muted">No badges yet — complete a lesson to earn first</span>`;
+  document.getElementById('badgeCount').textContent=`${store.badges.length}/8`;
+}
+function lockIn(){
+  const today=new Date().toDateString();
+  if(store.lastLockIn===today) return toast('Already locked in today — come back tomorrow 🔒');
+  store.lastLockIn=today; store.streak=(store.streak||0)+1; store.lockedCount=(store.lockedCount||1247)+1;
+  document.getElementById('lockedCount').textContent=store.lockedCount.toLocaleString();
+  save(); updateHud(); addXp(15,'Daily Lock-In'); checkBadges(); toast('🔒 Locked in — streak +1');
+}
+function calcFreedom(){
+  const pay=parseFloat(document.getElementById('fmPay').value)||80; const lot=parseFloat(document.getElementById('fmLot').value)||0.1;
+  const pipsNeeded=Math.ceil(pay / (lot*10)); const mins=Math.ceil(pipsNeeded/2.5);
+  document.getElementById('fmOut').textContent=`Need ~${pipsNeeded} pips (~${mins} min on Gold) to replace $${pay} day job`;
+}
+function updateSessions(){
+  const now=new Date(); const utc=now.getUTCHours()+now.getUTCMinutes()/60;
+  const sessions=[
+    {name:'London',open:8,close:17},
+    {name:'New York',open:13,close:22},
+    {name:'Overlap',open:13,close:17},
+  ];
+  const grid=document.getElementById('sessGrid'); grid.innerHTML='';
+  sessions.forEach(s=>{
+    const isOpen= utc>=s.open && utc< s.close;
+    const d=document.createElement('div'); d.className='stat'; d.style.borderColor=isOpen?'var(--green)':'var(--line)';
+    d.innerHTML=`<b style="color:${isOpen?'var(--green)':'var(--muted)'}">${isOpen?'● OPEN':'○ CLOSED'}</b><span>${s.name} ${s.open}:00-${s.close}:00 UTC</span>`;
+    grid.appendChild(d);
+  });
+  document.getElementById('sessTime').textContent=`UTC ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')} — Best window: London × NY Overlap`;
+}
+function checkQuest(){
+  const lessonsToday = Object.keys(store.lessonsDone).length>0;
+  const tradedToday = store.history.length>0;
+  const done = (lessonsToday?1:0)+(tradedToday?1:0);
+  updateQuestUI(done);
+}
+function checkQuestTrades(){ checkQuest() }
+function updateQuestUI(done){
+  if(done===undefined){ const lessonsToday = Object.keys(store.lessonsDone).length>0; const tradedToday = store.history.length>0; done=(lessonsToday?1:0)+(tradedToday?1:0) }
+  const pct=done/2*100; document.getElementById('questProg').style.width=pct+'%'; document.getElementById('questProgText').textContent=`${done}/2 done`;
+  if(done===2 && !store.questDoneToday){ store.questDoneToday=new Date().toDateString(); addXp(50,'Daily quest complete'); store.questDoneToday=true; }
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify(store,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`forgetrader-backup-${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url); toast('Exported JSON')
+}
+function resetAll(){ if(!confirm('Reset all data?')) return; localStorage.removeItem(LS_KEY); store={...defaultStore}; save(); location.reload()}
+
+// --- NAV ---
+function switchView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
+  if(name==='chart' && !chart) setTimeout(initChart,80);
+  if(name==='backtest' && !btChart) setTimeout(initBacktest,80);
+}
+document.querySelectorAll('.nav-tab').forEach(t=> t.addEventListener('click',()=> switchView(t.dataset.view)));
+
+// --- INIT ---
+renderLevels(); renderLearn(); renderBadges(); updateHud(); renderTrades(); updateSessions(); setInterval(updateSessions,60000);
+setTimeout(()=>{ if(!chart) initChart(); },300);
+setTimeout(()=>{ if(!btChart) initBacktest(); },600);
+// symbol change regenerates mock
+['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ candles=genCandles(400, document.getElementById('symSel').value==='BTCUSD'||document.getElementById('btSym').value==='BTCUSD'?67000:2650); if(candleSeries) {candleSeries.setData(candles); updateIndicators()} }));
+</script>
+</body>
+</html>
