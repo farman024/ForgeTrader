@@ -1190,7 +1190,30 @@ async function migratePasscodeToUser(){
   if(res2.ok){ document.getElementById('migrateMsg').textContent='Migrated ✓ — future backups use your user_id'; document.getElementById('migrateMsg').style.color='var(--neon)'; }
   else { document.getElementById('migrateMsg').textContent='Migrate failed'; }
 }
-setTimeout(()=>{ updateAuthUI(); loadProfile(); getSupaClient()?.auth.onAuthStateChange(()=> updateAuthUI()); }, 800);
+setTimeout(()=>{ updateAuthUI(); loadProfile(); getSupaClient()?.auth.onAuthStateChange(()=> updateAuthUI()); handleEmailConfirm(); }, 800);
+function handleEmailConfirm(){
+  const hash=window.location.hash; const search=window.location.search;
+  const isConfirm = hash.includes('access_token') || hash.includes('type=recovery') || hash.includes('type=signup') || search.includes('code=');
+  if(!isConfirm) return;
+  // let Supabase process session first
+  setTimeout(async()=>{
+    const supa=getSupaClient(); const {data:{user}}=await supa.auth.getUser();
+    const gate=document.getElementById('authGate');
+    // show confirm overlay
+    const overlay=document.createElement('div');
+    overlay.style.cssText='position:fixed;inset:0;background:rgba(6,8,24,.92);backdrop-filter:blur(10px);z-index:99;display:grid;place-items:center;padding:16px';
+    overlay.innerHTML=`<div style="background:linear-gradient(180deg, #0f1230, #070a1e);border:1px solid var(--neon);border-radius:14px;max-width:380px;width:100%;padding:22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 24px rgba(0,227,140,.2)">
+      <div style="width:44px;height:44px;border-radius:50%;background:rgba(0,227,140,.15);border:1px solid var(--neon);display:grid;place-items:center;margin:0 auto 10px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="2.2"><path d="M5 13l4 4L19 7"/></svg></div>
+      <div style="font-weight:900;letter-spacing:.06em">EMAIL CONFIRMED</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:6px">${user ? 'Welcome '+user.email+' — you are signed in.' : 'Your email is confirmed.'}<br>You can close this tab.</div>
+      <button class="btn btn-primary" style="margin-top:14px;width:100%" onclick="location.hash=''; location.search=''; this.closest('div').parentElement.remove(); hideGate();">GO TO FORGETRADER →</button>
+      <div class="small muted" style="margin-top:8px">Auto-closing in 3s...</div>
+    </div>`;
+    document.body.appendChild(overlay);
+    if(user) hideGate();
+    setTimeout(()=>{ try{overlay.remove(); history.replaceState(null,'', location.pathname); }catch{} }, 3200);
+  }, 600);
+}
 // symbol change regenerates mock
 ['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ candles=genCandles(400, document.getElementById('symSel').value==='BTCUSD'||document.getElementById('btSym').value==='BTCUSD'?67000:2650); if(candleSeries) {candleSeries.setData(candles); updateIndicators()} }));
 </script>
