@@ -145,13 +145,13 @@ a{color:var(--gold2)}
         <div class="statrow">
           <div class="stat"><b id="sRank">E-RANK</b><span>RANK (E→S)</span></div>
           <div class="stat"><b id="sLevel">LV 1</b><span>LEVEL</span></div>
-          <div class="stat"><b id="sStreak">0 🔥</b><span>DAY STREAK</span></div>
+          <div class="stat"><b id="sStreak">0 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 2C9 7 5 8.5 5 13a7 7 0 0 0 14 0C19 8.5 15 7 12 2z" fill="#00e38c" stroke="#00e38c" stroke-width="1.2"/><path d="M12 13c0 1.2 1 2 1 3" stroke="#070a1e" stroke-width="1.2" stroke-linecap="round"/></svg></b><span>DAY STREAK</span></div>
           <div class="stat"><b id="sBalance">$10,000</b><span>PAPER BALANCE</span></div>
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="switchView('learn')">START LESSON →</button>
           <button class="btn" onclick="switchView('chart')">OPEN CHART</button>
-          <button class="btn" id="lockInBtn" onclick="lockIn()">🔒 LOCK IN TODAY</button>
+          <button class="btn" id="lockInBtn" onclick="lockIn()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="11" width="18" height="11" rx="2" fill="rgba(124,58,237,.18)" stroke="#7c3aed"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#7c3aed"/></svg> LOCK IN TODAY</button>
           <span class="small muted" id="lockInInfo">Traders locked in today: <b id="lockedCount">1,247</b> (live • Supabase-ready)</span>
         </div>
         <div class="kpi" style="margin-top:10px">
@@ -286,9 +286,9 @@ a{color:var(--gold2)}
         <select id="btTF"><option value="60">1H</option><option value="240">4H</option><option value="1440">1D</option></select>
         <select id="btStrat"><option value="sma">SMA Cross (20/50)</option><option value="rsi">RSI 30/70</option><option value="bb">Bollinger Revert</option></select>
         <button class="btn btn-primary" onclick="runBacktest()">RUN BACKTEST</button>
-        <button class="btn" onclick="btPlay()">▶ PLAY</button>
-        <button class="btn" onclick="btPause()">⏸ PAUSE</button>
-        <button class="btn" onclick="btStep()">⏭ STEP</button>
+        <button class="btn" onclick="btPlay()"><svg width="12" height="12" viewBox="0 0 24 24" fill="#7c3aed" style="vertical-align:-2px"><path d="M7 4l12 8-12 8z"/></svg> PLAY</button>
+        <button class="btn" onclick="btPause()"><svg width="12" height="12" viewBox="0 0 24 24" fill="#7c3aed" style="vertical-align:-2px"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg> PAUSE</button>
+        <button class="btn" onclick="btStep()"><svg width="12" height="12" viewBox="0 0 24 24" fill="#7c3aed" style="vertical-align:-2px"><path d="M7 4l10 8-10 8z"/><rect x="17" y="4" width="3" height="16" rx="1"/></svg> STEP</button>
         <span class="small muted" id="btStats" style="margin-left:auto"></span>
       </div>
       <div style="height:10px"></div>
@@ -352,7 +352,7 @@ function updateHud(){
   const lvl = Math.floor(store.xp/400)+1; store.level=lvl;
   document.getElementById('hudLvl').textContent=lvl;
   document.getElementById('sRank').textContent=r.label; document.getElementById('sLevel').textContent='LV '+lvl;
-  document.getElementById('sStreak').textContent=store.streak+' 🔥';
+  document.getElementById('sStreak').textContent=store.streak+' <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 2C9 7 5 8.5 5 13a7 7 0 0 0 14 0C19 8.5 15 7 12 2z" fill="#00e38c" stroke="#00e38c" stroke-width="1.2"/><path d="M12 13c0 1.2 1 2 1 3" stroke="#070a1e" stroke-width="1.2" stroke-linecap="round"/></svg>';
   document.getElementById('sBalance').textContent='$'+store.balance.toFixed(2);
   const rb=document.getElementById('hudRank'); rb.textContent=r.label; rb.style.color=r.color; rb.style.borderColor=r.color; rb.style.background='rgba(255,255,255,.06)';
   document.getElementById('xpFill').style.width=Math.min(100,pct)+'%';
@@ -382,7 +382,7 @@ function renderLevels(){
     const doneLessons = l.lessons.filter((_,i)=> store.lessonsDone[`${l.id}-${i}`]).length;
     const pct = (doneLessons/l.lessons.length)*100;
     const d=document.createElement('div'); d.className='level'+(locked?' locked':'');
-    d.innerHTML=`<div class="level-head" style="background:linear-gradient(135deg, ${l.color}, #0a0a0c)"><div class="level-num">LV ${l.id} • ${l.xp} XP</div><div style="font-size:22px">⚒️</div></div><div class="level-body"><h3>${l.title}</h3><p>${l.desc}</p><div class="level-meta"><span class="badge">${l.lessons.length} lessons</span><span class="badge ${doneLessons? 'badge-gold':''}">${doneLessons}/${l.lessons.length} done</span></div><div class="progress"><i style="width:${pct}%"></i></div><div style="margin-top:8px"><button class="btn btn-sm ${locked?'': 'btn-primary'}" onclick="switchView('learn');openLevel(${l.id})" ${locked?'disabled':''}>${locked?'LOCKED — '+((l.id-1)*320)+' XP needed':'ENTER FORGE →'}</button></div></div>`;
+    d.innerHTML=`<div class="level-head" style="background:linear-gradient(135deg, ${l.color}, #0a0a0c)"><div class="level-num">LV ${l.id} • ${l.xp} XP</div><div style="font-size:22px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="vertical-align:-3px"><path d="M14 2l6 6-10 10H4v-6L14 2z" fill="rgba(124,58,237,.85)" stroke="#a78bfa"/><path d="M13 7l4 4" stroke="#fff" stroke-width="1.2"/></svg></div></div><div class="level-body"><h3>${l.title}</h3><p>${l.desc}</p><div class="level-meta"><span class="badge">${l.lessons.length} lessons</span><span class="badge ${doneLessons? 'badge-gold':''}">${doneLessons}/${l.lessons.length} done</span></div><div class="progress"><i style="width:${pct}%"></i></div><div style="margin-top:8px"><button class="btn btn-sm ${locked?'': 'btn-primary'}" onclick="switchView('learn');openLevel(${l.id})" ${locked?'disabled':''}>${locked?'LOCKED — '+((l.id-1)*320)+' XP needed':'ENTER FORGE →'}</button></div></div>`;
     g.appendChild(d);
   })
 }
@@ -399,7 +399,7 @@ function renderLearn(){
       const prevDone = idx===0 || store.lessonsDone[`${l.id}-${idx-1}`];
       const isLocked = locked || !prevDone;
       const el=document.createElement('div'); el.className='lesson'+(done?' done':'')+(isLocked?' locked':'');
-      el.innerHTML=`<div class="lesson-icon">${done?'✓': '📖'}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${title}</div><div class="small muted">${done? 'Completed +100 XP' : isLocked? 'Complete previous lesson first' : 'Tap to study'}</div></div><span class="badge">${done? 'DONE':'+100 XP'}</span>`;
+      el.innerHTML=`<div class="lesson-icon">${done?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg>': '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.7" style="vertical-align:-2px"><path d="M4 19a2 2 0 0 0 2 2h12"/><path d="M4 4v15a2 2 0 0 1 2-2h12V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z" fill="rgba(124,58,237,.18)"/><path d="M8 7h8M8 11h8" stroke="#7c3aed" stroke-width="1.2"/></svg>'}</div><div style="flex:1"><div style="font-size:12px;font-weight:700">${title}</div><div class="small muted">${done? 'Completed +100 XP' : isLocked? 'Complete previous lesson first' : 'Tap to study'}</div></div><span class="badge">${done? 'DONE':'+100 XP'}</span>`;
       el.onclick=()=>{ if(isLocked) return toast('Complete previous lesson first'); openLesson(l.id,idx,title)};
       list.appendChild(el);
     });
@@ -407,7 +407,7 @@ function renderLearn(){
     const allDone = l.lessons.every((_,i)=> store.lessonsDone[`${l.id}-${i}`]);
     if(allDone){
       const q=document.createElement('div'); q.className='quiz'; q.style.marginTop='8px';
-      q.innerHTML=`<h4>⚔️ Level ${l.id} Trial — pass to keep XP (mock quiz)</h4><div class="q"><p><b>Q:</b> ${quizQ(l.id)}</p><div class="q-opts" id="q-${l.id}"></div><div id="qr-${l.id}" class="small muted" style="margin-top:8px"></div></div>`;
+      q.innerHTML=`<h4><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6" style="vertical-align:-2px"><path d="M14 4l6 6-3 3-6-6z" fill="#7c3aed"/><path d="M4 14l6 6-3-3-6-6z" fill="#7c3aed"/><path d="M9 9l6 6M15 9l-6 6" stroke="#00e38c" stroke-width="1.2"/></svg> Level ${l.id} Trial — pass to keep XP (mock quiz)</h4><div class="q"><p><b>Q:</b> ${quizQ(l.id)}</p><div class="q-opts" id="q-${l.id}"></div><div id="qr-${l.id}" class="small muted" style="margin-top:8px"></div></div>`;
       c.appendChild(q);
       setTimeout(()=>renderQuiz(l.id),0);
     }
@@ -427,8 +427,8 @@ function renderQuiz(id){
     const b=document.createElement('button'); b.textContent=o;
     b.onclick=()=>{
       const r=document.getElementById(`qr-${id}`);
-      if(i===data.a){b.classList.add('correct'); r.textContent='✓ Correct — +50 XP bonus'; r.style.color='var(--green)'; addXp(50,`Level ${id} trial`)}
-      else {b.classList.add('wrong'); r.textContent='✗ Try again — hint: re-read the lesson'; r.style.color='var(--red)'}
+      if(i===data.a){b.classList.add('correct'); r.textContent='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg> Correct — +50 XP bonus'; r.style.color='var(--green)'; addXp(50,`Level ${id} trial`)}
+      else {b.classList.add('wrong'); r.textContent='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg> Try again — hint: re-read the lesson'; r.style.color='var(--red)'}
     };
     box.appendChild(b);
   })
@@ -457,7 +457,7 @@ function openLesson(lid,idx,title){
     'Boss: 10 R in profit': 'Boss challenge: make 10R (10x your risk) in paper P/L. If you risk $10/trade, need $100 profit. Takes discipline, not luck.',
   }[title]||'Lesson content — practice on chart after reading.';
   const w=document.createElement('div'); w.style.position='fixed';w.style.inset='0';w.style.background='rgba(0,0,0,.6)';w.style.display='grid';w.style.placeItems='center';w.style.zIndex='60';w.id='lessonModal';
-  w.innerHTML=`<div class="card" style="max-width:560px;width:92%"><div class="card-h">${title} <button class="btn btn-sm" onclick="closeLesson()">✕</button></div><p class="small" style="line-height:1.7">${content}</p><div class="sep"></div><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="completeLesson()">MARK DONE +100 XP</button><button class="btn" onclick="closeLesson()">Close</button><button class="btn" onclick="closeLesson();switchView('chart')">OPEN CHART</button></div></div>`;
+  w.innerHTML=`<div class="card" style="max-width:560px;width:92%"><div class="card-h">${title} <button class="btn btn-sm" onclick="closeLesson()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="small" style="line-height:1.7">${content}</p><div class="sep"></div><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="completeLesson()">MARK DONE +100 XP</button><button class="btn" onclick="closeLesson()">Close</button><button class="btn" onclick="closeLesson();switchView('chart')">OPEN CHART</button></div></div>`;
   w.onclick=(e)=>{ if(e.target===w) closeLesson()};
   document.body.appendChild(w);
 }
@@ -666,20 +666,20 @@ function checkBadges(){
     {id:'profit',label:'In Profit',need:()=> store.balance>10000},
     {id:'rankC',label:'C-Rank',need:()=> getRank(store.xp).rank==='C'||['B','A','S'].includes(getRank(store.xp).rank)},
   ];
-  defs.forEach(d=>{ if(!store.badges.includes(d.id) && d.need()){ store.badges.push(d.id); save(); toast(`🏆 Badge unlocked: ${d.label}`)}});
+  defs.forEach(d=>{ if(!store.badges.includes(d.id) && d.need()){ store.badges.push(d.id); save(); toast(`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.6" style="vertical-align:-2px"><path d="M6 3h12v4a6 6 0 0 1-6 6a6 6 0 0 1-6-6V3z" fill="rgba(124,58,237,.2)"/><path d="M8 21h8M12 13v4"/><path d="M6 7H4a3 3 0 0 0 3 3M18 7h2a3 3 0 0 1-3 3"/></svg> Badge unlocked: ${d.label}`)}});
   renderBadges();
 }
 function renderBadges(){
-  const grid=document.getElementById('badgeGrid'); const defs={first_lesson:'📘',level2:'🔓',first_trade:'⚔️',ten_trades:'⚒️',backtester:'📈',streak3:'🔥',profit:'💰',rankC:'🏅'};
-  grid.innerHTML= store.badges.length? store.badges.map(b=>`<span class="badge badge-gold">${defs[b]||'🏆'} ${b}</span>`).join('') : `<span class="small muted">No badges yet — complete a lesson to earn first</span>`;
+  const grid=document.getElementById('badgeGrid'); const defs={first_lesson:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="1.7" style="vertical-align:-2px"><path d="M4 19a2 2 0 0 0 2 2h12M4 4v15a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2h4V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z" fill="rgba(124,58,237,.18)"/></svg>',level2:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" style="vertical-align:-2px"><rect x="3" y="11" width="18" height="11" rx="2" fill="rgba(124,58,237,.12)"/><path d="M7 11V7a5 5 0 0 1 10 0v2"/><circle cx="12" cy="16" r="1.5" fill="#a78bfa"/></svg>',first_trade:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.6" style="vertical-align:-2px"><path d="M14 4l6 6-3 3-6-6z" fill="#7c3aed"/><path d="M4 14l6 6-3-3-6-6z" fill="#7c3aed"/><path d="M9 9l6 6M15 9l-6 6" stroke="#00e38c" stroke-width="1.2"/></svg>',ten_trades:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="vertical-align:-3px"><path d="M14 2l6 6-10 10H4v-6L14 2z" fill="rgba(124,58,237,.85)" stroke="#a78bfa"/><path d="M13 7l4 4" stroke="#fff" stroke-width="1.2"/></svg>',backtester:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="1.8" style="vertical-align:-2px"><path d="M3 17l6-6 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h7v7" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="3" width="18" height="18" rx="2" stroke="#7c3aed" stroke-width="1.2" opacity=".35"/></svg>',streak3:'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 2C9 7 5 8.5 5 13a7 7 0 0 0 14 0C19 8.5 15 7 12 2z" fill="#00e38c" stroke="#00e38c" stroke-width="1.2"/><path d="M12 13c0 1.2 1 2 1 3" stroke="#070a1e" stroke-width="1.2" stroke-linecap="round"/></svg>',profit:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.6" style="vertical-align:-2px"><circle cx="12" cy="12" r="8" fill="rgba(251,191,36,.18)"/><path d="M8 12h8M12 8v8" stroke="#fbbf24" stroke-width="1.4"/><circle cx="12" cy="12" r="8" stroke="#f59e0b"/></svg>',rankC:'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.6" style="vertical-align:-2px"><circle cx="12" cy="13" r="6" fill="rgba(124,58,237,.2)" stroke="#7c3aed"/><path d="M8 3l2 4 2-4 2 4 2-4" fill="#a78bfa" stroke="#7c3aed"/></svg>'};
+  grid.innerHTML= store.badges.length? store.badges.map(b=>`<span class="badge badge-gold">${defs[b]||'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="1.6" style="vertical-align:-2px"><path d="M6 3h12v4a6 6 0 0 1-6 6a6 6 0 0 1-6-6V3z" fill="rgba(124,58,237,.2)"/><path d="M8 21h8M12 13v4"/><path d="M6 7H4a3 3 0 0 0 3 3M18 7h2a3 3 0 0 1-3 3"/></svg>'} ${b}</span>`).join('') : `<span class="small muted">No badges yet — complete a lesson to earn first</span>`;
   document.getElementById('badgeCount').textContent=`${store.badges.length}/8`;
 }
 function lockIn(){
   const today=new Date().toDateString();
-  if(store.lastLockIn===today) return toast('Already locked in today — come back tomorrow 🔒');
+  if(store.lastLockIn===today) return toast('Already locked in today — come back tomorrow <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="11" width="18" height="11" rx="2" fill="rgba(124,58,237,.18)" stroke="#7c3aed"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#7c3aed"/></svg>');
   store.lastLockIn=today; store.streak=(store.streak||0)+1; store.lockedCount=(store.lockedCount||1247)+1;
   document.getElementById('lockedCount').textContent=store.lockedCount.toLocaleString();
-  save(); updateHud(); addXp(15,'Daily Lock-In'); checkBadges(); toast('🔒 Locked in — streak +1');
+  save(); updateHud(); addXp(15,'Daily Lock-In'); checkBadges(); toast('<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><rect x="3" y="11" width="18" height="11" rx="2" fill="rgba(124,58,237,.18)" stroke="#7c3aed"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#7c3aed"/></svg> Locked in — streak +1');
 }
 function calcFreedom(){
   const pay=parseFloat(document.getElementById('fmPay').value)||80; const lot=parseFloat(document.getElementById('fmLot').value)||0.1;
@@ -697,7 +697,7 @@ function updateSessions(){
   sessions.forEach(s=>{
     const isOpen= utc>=s.open && utc< s.close;
     const d=document.createElement('div'); d.className='stat'; d.style.borderColor=isOpen?'var(--green)':'var(--line)';
-    d.innerHTML=`<b style="color:${isOpen?'var(--green)':'var(--muted)'}">${isOpen?'● OPEN':'○ CLOSED'}</b><span>${s.name} ${s.open}:00-${s.close}:00 UTC</span>`;
+    d.innerHTML=`<b style="color:${isOpen?'var(--green)':'var(--muted)'}">${isOpen?'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#00e38c;box-shadow:0 0 6px rgba(0,227,140,.6);vertical-align:middle;margin-right:4px"></span> OPEN':'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;border:1.5px solid #8e92c0;vertical-align:middle;margin-right:4px"></span> CLOSED'}</b><span>${s.name} ${s.open}:00-${s.close}:00 UTC</span>`;
     grid.appendChild(d);
   });
   document.getElementById('sessTime').textContent=`UTC ${String(now.getUTCHours()).padStart(2,'0')}:${String(now.getUTCMinutes()).padStart(2,'0')} — Best window: London × NY Overlap`;
