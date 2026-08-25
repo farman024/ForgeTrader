@@ -25,8 +25,18 @@
 <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#070a1e;--panel:#0f1230;--card:#171a3d;--line:#262a5a;--muted:#8e92c0;--text:#e9ecff;--gold:#7c3aed;--gold2:#a78bfa;--orange:#00e38c;--green:#00e38c;--red:#ef4444;--blue:#38bdf8;--rankE:#6b7280;--rankD:#00e38c;--rankC:#38bdf8;--rankB:#7c3aed;--rankA:#a78bfa;--rankS:#ff2e63;--purple:#7c3aed;--purple2:#5b21b6;--neon:#00e38c}
-body{font-family:'JetBrains Mono','Consolas',monospace;background:var(--bg);color:var(--text);min-height:100vh}
+:root{--bg:#070a14;--panel:#0e1026;--card:#111332;--line:#1e2250;--muted:#8b8fc0;--text:#eef0ff;--gold:#7c3aed;--gold2:#a78bfa;--orange:#00e38c;--green:#00e38c;--red:#ff3b42;--blue:#38bdf8;--rankE:#6b7280;--rankD:#00e38c;--rankC:#38bdf8;--rankB:#7c3aed;--rankA:#a78bfa;--rankS:#ff2e63;--purple:#7c3aed;--purple2:#5b21b6;--neon:#00e38c;--institutional-bg:#060818;--desk:#0a0c1e}
+body{font-family:'Inter','JetBrains Mono','Consolas',monospace;background:var(--bg);color:var(--text);min-height:100vh; -webkit-font-smoothing:antialiased}
+.mono{font-family:'JetBrains Mono',monospace; font-variant-numeric:tabular-nums}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--neon);box-shadow:0 0 8px rgba(0,227,140,.9);animation:pulse 1.6s infinite; display:inline-block}
+@keyframes pulse{0%,100%{opacity:1} 50%{opacity:.5; transform:scale(.9)}}
+.ticker{height:28px;background:#060818;border-bottom:1px solid var(--line);display:flex;align-items:center;overflow:hidden;white-space:nowrap;font-size:11px;letter-spacing:.02em}
+.ticker-track{display:flex;gap:22px;animation:scroll 60s linear infinite; will-change:transform}
+@keyframes scroll{0%{transform:translateX(0)} 100%{transform:translateX(-50%)}}
+.ticker-item{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ticker-item b{font-variant-numeric:tabular-nums}
+.ticker-up{color:var(--neon)} .ticker-down{color:var(--red)}
+.institutional-card{border:1px solid #1e2250; border-radius:10px; background:linear-gradient(180deg, rgba(15,18,48,.9), rgba(7,10,30,.95)); box-shadow:0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04)}
 a{color:var(--gold2)}
 /* NAV */
 .nav{position:sticky;top:0;z-index:50;background:rgba(7,10,30,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:0;padding:0 14px;height:56px;overflow-x:auto}
@@ -54,7 +64,8 @@ a{color:var(--gold2)}
 .nav-tabs{scrollbar-width:none;-ms-overflow-style:none} .nav-tabs::-webkit-scrollbar{display:none} .nav{scrollbar-width:none}
 #lessonModal .card{max-height:88vh;overflow:auto}
 #toast{max-width:92vw;text-align:center}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03)}
+.card.institutional{border-radius:8px; background:linear-gradient(180deg, #0f1230, #0a0c1e); border-color:#1e2250}
 .card-h{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em}
 .btn:hover{border-color:var(--purple);color:var(--gold2)}
@@ -66,20 +77,22 @@ a{color:var(--gold2)}
 .badge-gold{border-color:var(--purple);color:var(--gold2);background:rgba(124,58,237,.18)}
 .kbd{padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;font-size:11px;color:var(--muted);background:var(--card)}
 /* HERO */
-.hero{background:radial-gradient(800px 400px at 30% 0%, rgba(124,58,237,.22), transparent 60%), radial-gradient(600px 300px at 90% 20%, rgba(0,227,140,.16), transparent 60%), linear-gradient(180deg, #0f1230, #070a1e);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.hero{background:linear-gradient(180deg, rgba(15,18,48,.98), rgba(6,8,24,.98)), radial-gradient(700px 300px at 18% 0%, rgba(124,58,237,.18), transparent 60%), radial-gradient(500px 260px at 92% 10%, rgba(0,227,140,.10), transparent 60%);border:1px solid #1e2250;border-radius:10px;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent, rgba(124,58,237,.45), transparent)}
 @media(max-width:900px){.hero{grid-template-columns:1fr}}
 .hero h1{font-size:28px;line-height:1.1;letter-spacing:-.02em}
 .hero h1 b{color:var(--gold2);text-shadow:0 0 14px rgba(124,58,237,.35)}
 .hero p{color:var(--muted);font-size:12px;line-height:1.6;margin-top:8px}
 .statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:120px}
+.stat{background:var(--card);border:1px solid #1e2250;border-radius:8px;padding:10px 12px;min-width:120px;position:relative;overflow:hidden}
+.stat::after{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--purple);opacity:.7}
 .stat b{font-size:18px}
 .stat span{font-size:10px;letter-spacing:.1em;color:var(--muted);display:block;margin-top:2px}
 /* LEVELS */
 .level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:1000px){.level-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.level-grid{grid-template-columns:1fr}}
-.level{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--panel);position:relative}
+.level{border:1px solid #1e2250;border-radius:10px;overflow:hidden;background:var(--panel);position:relative;box-shadow:0 4px 16px rgba(0,0,0,.25)}
 .level.locked{opacity:.55}
 .level-head{height:80px;display:flex;align-items:end;padding:10px;position:relative;overflow:hidden}
 .level-head::after{content:'';position:absolute;inset:0;opacity:.22;background:radial-gradient(300px 120px at 20% 0%, #fff, transparent 70%)}
@@ -105,7 +118,7 @@ a{color:var(--gold2)}
 .q-opts button.correct{border-color:var(--green);background:rgba(16,185,129,.15)}
 .q-opts button.wrong{border-color:var(--red);background:rgba(239,68,68,.15)}
 /* CHART */
-.chart-wrap{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.chart-wrap{background:var(--panel);border:1px solid #1e2250;border-radius:10px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35)}
 .chart-head{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .chart-head select,.chart-head input{background:var(--card);border:1px solid var(--line);color:var(--text);padding:6px 8px;border-radius:8px;font-size:11px}
 #chart{height:420px}
@@ -139,7 +152,7 @@ a{color:var(--gold2)}
 </head>
 <body>
 <nav class="nav">
-  <div class="nav-logo"><img src="logo.png" alt="ForgeTrader"><b>FORGE</b>TRADER <span>DEMO • NO REAL MONEY</span></div>
+  <div class="nav-logo"><img src="logo.png" alt="ForgeTrader"><b>FORGE</b>TRADER <span><span class="live-dot"></span> DEMO • PAPER ONLY</span></div>
   <div class="nav-tabs" id="tabs">
     <div class="nav-tab active" data-view="dash">DASHBOARD</div>
     <div class="nav-tab" data-view="learn">LEARN</div>
@@ -149,11 +162,12 @@ a{color:var(--gold2)}
     <div class="nav-tab" data-view="journal">JOURNAL</div>
   </div>
   <div class="nav-right">
-    <div class="hud">LVL <b id="hudLvl">1</b> • <b id="hudXp">0</b> XP</div>
-    <div id="hudRank" class="rank-badge" style="background:#1f1f2a;color:#9ca3af;border:1px solid #2a2a3a">E-RANK</div>
+    <div class="hud mono" style="display:flex;align-items:center;gap:8px"><span class="live-dot"></span> LIVE <span style="color:var(--muted)">FEED</span> <b id="hudLvl">1</b> • <b id="hudXp">0</b> XP</div>
+    <div id="hudRank" class="rank-badge" style="background:#0c0e2a;color:#9ca3af;border:1px solid #1e2250">E-RANK</div>
     <div class="xp-bar"><div id="xpFill" class="xp-fill"></div></div>
   </div>
 </nav>
+<div class="ticker" id="ticker"><div class="ticker-track" id="tickerTrack"></div></div>
 
 <div class="wrap">
   <!-- DASHBOARD -->
@@ -752,6 +766,33 @@ document.querySelectorAll('.nav-tab').forEach(t=> t.addEventListener('click',()=
 // --- PWA ---
 if('serviceWorker' in navigator){ window.addEventListener('load',()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
 let deferredPrompt=null; window.addEventListener('beforeinstallprompt',e=>{e.preventDefault(); deferredPrompt=e; const b=document.createElement('button'); b.textContent='Install ForgeTrader'; b.className='btn btn-primary'; b.style.position='fixed'; b.style.bottom='14px'; b.style.right='14px'; b.style.zIndex='70'; b.onclick=()=>{deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{b.remove()})}; document.body.appendChild(b); setTimeout(()=>b.remove(), 12000)});
+
+// --- INSTITUTIONAL TICKER ---
+const TICKER_SYMS=[
+  {s:'XAUUSD', p:2650.32, d:0},
+  {s:'BTCUSD', p:67840, d:0},
+  {s:'EURUSD', p:1.0845, d:0},
+  {s:'NAS100', p:18240, d:0},
+  {s:'GER40', p:18420, d:0},
+  {s:'GBPUSD', p:1.2732, d:0},
+];
+function renderTicker(){
+  const track=document.getElementById('tickerTrack'); if(!track) return;
+  // duplicate for seamless scroll
+  const items=[...TICKER_SYMS, ...TICKER_SYMS];
+  track.innerHTML=items.map(t=>{
+    const up=t.d>=0; const cls=up?'ticker-up':'ticker-down'; const arrow=up?'▲':'▼';
+    const price=t.s.includes('USD') && t.p>100 ? t.p.toFixed(2) : t.s==='EURUSD'||t.s==='GBPUSD' ? t.p.toFixed(4) : t.p.toFixed(2);
+    return `<span class="ticker-item ${cls}"><span style="color:var(--muted);font-weight:600">${t.s}</span> <b>${price}</b> <span style="font-size:10px">${arrow} ${Math.abs(t.d).toFixed(2)}%</span> <span style="color:var(--muted)">• VOL ${ (Math.random()*2+0.8).toFixed(1)}M</span></span>`;
+  }).join('<span style="color:var(--line)">|</span>');
+}
+function tickTicker(){
+  TICKER_SYMS.forEach(t=>{
+    const ch=(Math.random()-0.49)*0.18; t.d=ch; if(t.s==='BTCUSD') t.p+= (Math.random()-0.5)*120; else if(t.s==='XAUUSD') t.p+=(Math.random()-0.5)*1.8; else if(t.p>10) t.p+=(Math.random()-0.5)*4; else t.p+=(Math.random()-0.5)*0.002;
+  });
+  renderTicker();
+}
+renderTicker(); setInterval(tickTicker, 1800);
 
 // --- INIT ---
 renderLevels(); renderLearn(); renderBadges(); updateHud(); renderTrades(); updateSessions(); setInterval(updateSessions,60000);
