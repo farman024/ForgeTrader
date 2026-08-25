@@ -4,25 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ForgeTrader — Learn Trading. For Real. For Free.</title>
-<meta name="theme-color" content="#0f0f13">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23f59e0b'/><text x='16' y='22' text-anchor='middle' font-size='18' font-weight='900' fill='%23000'>F</text></svg>">
+<meta name="theme-color" content="#0a0c1e">
+<link rel="icon" href="logo.png">
 <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#08080c;--panel:#12121a;--card:#181825;--line:#26263a;--muted:#8b8baa;--text:#e8e8f0;--gold:#f59e0b;--gold2:#fbbf24;--orange:#ff6b35;--green:#10b981;--red:#ef4444;--blue:#3b82f6;--rankE:#6b7280;--rankD:#10b981;--rankC:#3b82f6;--rankB:#8b5cf6;--rankA:#f59e0b;--rankS:#ff2e63}
+:root{--bg:#070a1e;--panel:#0f1230;--card:#171a3d;--line:#262a5a;--muted:#8e92c0;--text:#e9ecff;--gold:#7c3aed;--gold2:#a78bfa;--orange:#00e38c;--green:#00e38c;--red:#ef4444;--blue:#38bdf8;--rankE:#6b7280;--rankD:#00e38c;--rankC:#38bdf8;--rankB:#7c3aed;--rankA:#a78bfa;--rankS:#ff2e63;--purple:#7c3aed;--purple2:#5b21b6;--neon:#00e38c}
 body{font-family:'JetBrains Mono','Consolas',monospace;background:var(--bg);color:var(--text);min-height:100vh}
-a{color:var(--gold)}
+a{color:var(--gold2)}
 /* NAV */
-.nav{position:sticky;top:0;z-index:50;background:rgba(8,8,12,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:0;padding:0 14px;height:56px;overflow-x:auto}
+.nav{position:sticky;top:0;z-index:50;background:rgba(7,10,30,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:0;padding:0 14px;height:56px;overflow-x:auto}
 .nav-logo{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.08em;font-size:15px;white-space:nowrap}
-.nav-logo b{color:var(--gold)}
-.nav-logo span{background:var(--gold);color:#000;padding:2px 6px;border-radius:4px;font-size:11px}
+.nav-logo img{width:34px;height:34px;border-radius:8px;object-fit:cover;border:1px solid var(--line);box-shadow:0 0 12px rgba(124,58,237,.35)}
+.nav-logo b{color:#fff}
+.nav-logo span{background:var(--neon);color:#000;padding:2px 6px;border-radius:4px;font-size:11px}
 .nav-tabs{margin-left:18px;display:flex;gap:2px}
 .nav-tab{padding:8px 12px;border-radius:8px;cursor:pointer;font-size:12px;letter-spacing:.06em;color:var(--muted);border:1px solid transparent;white-space:nowrap}
-.nav-tab.active{background:var(--panel);border-color:var(--line);color:var(--gold)}
+.nav-tab.active{background:var(--panel);border-color:var(--purple);color:var(--gold2)}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-.xp-bar{width:140px;height:8px;background:#1e1e2e;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
-.xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));width:0%;transition:.4s}
+.xp-bar{width:140px;height:8px;background:#0c0e2a;border-radius:999px;overflow:hidden;border:1px solid var(--line)}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--neon));width:0%;transition:.4s;box-shadow:0 0 8px rgba(124,58,237,.5)}
 .rank-badge{padding:4px 8px;border-radius:6px;font-weight:900;font-size:11px;letter-spacing:.08em}
 .hud{font-size:11px;color:var(--muted)}
 .hud b{color:var(--text)}
@@ -36,19 +37,19 @@ a{color:var(--gold)}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .card-h{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em}
-.btn:hover{border-color:var(--gold);color:var(--gold)}
-.btn-primary{background:var(--gold);color:#000;border-color:var(--gold);font-weight:800}
-.btn-primary:hover{background:var(--gold2)}
+.btn:hover{border-color:var(--purple);color:var(--gold2)}
+.btn-primary{background:var(--purple);color:#fff;border-color:var(--purple);font-weight:800;box-shadow:0 4px 14px rgba(124,58,237,.35)}
+.btn-primary:hover{background:var(--purple2)}
 .btn-ghost{background:transparent}
 .btn-sm{padding:6px 9px;font-size:11px}
 .badge{padding:2px 7px;border-radius:999px;font-size:10px;letter-spacing:.08em;border:1px solid var(--line);color:var(--muted)}
-.badge-gold{border-color:var(--gold);color:var(--gold);background:rgba(245,158,11,.12)}
+.badge-gold{border-color:var(--purple);color:var(--gold2);background:rgba(124,58,237,.18)}
 .kbd{padding:2px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;font-size:11px;color:var(--muted);background:var(--card)}
 /* HERO */
-.hero{background:radial-gradient(800px 400px at 30% 0%, rgba(245,158,11,.18), transparent 60%), linear-gradient(180deg, #12121a, #0c0c11);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+.hero{background:radial-gradient(800px 400px at 30% 0%, rgba(124,58,237,.22), transparent 60%), radial-gradient(600px 300px at 90% 20%, rgba(0,227,140,.16), transparent 60%), linear-gradient(180deg, #0f1230, #070a1e);border:1px solid var(--line);border-radius:16px;padding:18px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
 @media(max-width:900px){.hero{grid-template-columns:1fr}}
 .hero h1{font-size:28px;line-height:1.1;letter-spacing:-.02em}
-.hero h1 b{color:var(--gold)}
+.hero h1 b{color:var(--gold2);text-shadow:0 0 14px rgba(124,58,237,.35)}
 .hero p{color:var(--muted);font-size:12px;line-height:1.6;margin-top:8px}
 .statrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;min-width:120px}
@@ -67,8 +68,8 @@ a{color:var(--gold)}
 .level h3{font-size:13px;letter-spacing:.04em}
 .level p{font-size:11px;color:var(--muted);line-height:1.5;margin-top:6px;min-height:34px}
 .level-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.progress{height:6px;background:#1e1e2e;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
-.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--orange));width:0%}
+.progress{height:6px;background:#0c0e2a;border-radius:999px;overflow:hidden;border:1px solid var(--line);margin-top:10px}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--purple),var(--neon));width:0%;box-shadow:0 0 6px rgba(124,58,237,.4)}
 /* LESSONS */
 .lesson-list{display:grid;gap:8px}
 .lesson{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--line);border-radius:10px;cursor:pointer}
@@ -93,7 +94,7 @@ a{color:var(--gold)}
 .chat{border:1px solid var(--line);border-radius:14px;background:var(--panel);display:flex;flex-direction:column;height:420px;overflow:hidden}
 .chat-log{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
 .msg{padding:8px 10px;border-radius:10px;font-size:12px;line-height:1.5;max-width:92%}
-.msg.user{align-self:flex-end;background:var(--gold);color:#000}
+.msg.user{align-self:flex-end;background:var(--purple);color:#fff}
 .msg.bot{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
 .chat-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);background:rgba(0,0,0,.2)}
 .chat-in input{flex:1;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px 10px;border-radius:10px;font-size:12px}
@@ -118,7 +119,7 @@ a{color:var(--gold)}
 </head>
 <body>
 <nav class="nav">
-  <div class="nav-logo">⚒️ <b>FORGE</b>TRADER <span>DEMO • NO REAL MONEY</span></div>
+  <div class="nav-logo"><img src="logo.png" alt="ForgeTrader"><b>FORGE</b>TRADER <span>DEMO • NO REAL MONEY</span></div>
   <div class="nav-tabs" id="tabs">
     <div class="nav-tab active" data-view="dash">DASHBOARD</div>
     <div class="nav-tab" data-view="learn">LEARN</div>
@@ -334,7 +335,7 @@ const RANK_TABLE=[
   {rank:'D',label:'D-RANK',min:500,color:'#10b981',next:1500},
   {rank:'C',label:'C-RANK',min:1500,color:'#3b82f6',next:3000},
   {rank:'B',label:'B-RANK',min:3000,color:'#8b5cf6',next:5000},
-  {rank:'A',label:'A-RANK',min:5000,color:'#f59e0b',next:8000},
+  {rank:'A',label:'A-RANK',min:5000,color:'#7c3aed',next:8000},
   {rank:'S',label:'S-RANK',min:8000,color:'#ff2e63',next:Infinity},
 ];
 function getRank(xp){for(let i=RANK_TABLE.length-1;i>=0;i--) if(xp>=RANK_TABLE[i].min) return RANK_TABLE[i]; return RANK_TABLE[0]}
@@ -368,7 +369,7 @@ function toast(m){const t=document.getElementById('toast'); t.textContent=m; t.s
 
 // --- LEVELS ---
 const LEVELS=[
-  {id:1,title:'Level 1 — First Steps',desc:'What is trading? Markets, demo vs real, why 90% lose.',color:'#f59e0b',lessons:['What is a market?','Demo vs Real money','The 1% risk rule'],xp:100},
+  {id:1,title:'Level 1 — First Steps',desc:'What is trading? Markets, demo vs real, why 90% lose.',color:'#7c3aed',lessons:['What is a market?','Demo vs Real money','The 1% risk rule'],xp:100},
   {id:2,title:'Level 2 — Charts',desc:'Candles, timeframe, support/resistance, trend.',color:'#3b82f6',lessons:['Candlesticks decoded','Timeframes','S/R + Trendlines'],xp:100},
   {id:3,title:'Level 3 — Risk',desc:'Position size, stop loss, RR, journal.',color:'#10b981',lessons:['Lot size math','Stop & Take Profit','Risk/Reward 1:2+'],xp:100},
   {id:4,title:'Level 4 — Strategy',desc:'RSI, MA, Bollinger — build your first edge.',color:'#8b5cf6',lessons:['RSI 30/70','MA Cross','Bollinger Bands'],xp:100},
@@ -492,7 +493,7 @@ function initChart(){
   chart=LightweightCharts.createChart(el,{layout:{background:{color:'#12121a'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{timeVisible:true, secondsVisible:false},rightPriceScale:{borderColor:'#26263a'}});
   candleSeries=chart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderVisible:false,wickUpColor:'#10b981',wickDownColor:'#ef4444'});
   candleSeries.setData(candles);
-  smaSeries=chart.addLineSeries({color:'#f59e0b',lineWidth:1}); updateIndicators();
+  smaSeries=chart.addLineSeries({color:'#7c3aed',lineWidth:1}); updateIndicators();
   bbU=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1}); bbL=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1});
   chart.timeScale().fitContent();
   // rsi sub
