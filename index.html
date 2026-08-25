@@ -643,6 +643,7 @@ function rsi(data, period=14){
 // --- LIVE FEED (Binance + Yahoo) ---
 const LIVE_INTERVAL_MAP={1:'1m',5:'5m',15:'15m',60:'1h',240:'4h',1440:'1d'};
 let liveMode=false;
+let liveSource='';
 async function fetchBinanceKlines(symbol, interval, limit=300){
   const iv=LIVE_INTERVAL_MAP[interval]||'1h';
   const urls=[
@@ -691,7 +692,9 @@ async function fetchTwelveKlines(symbol, interval, limit=300){
       if(j.status==='error' || j.code) throw new Error(j.message||'twelve '+j.code);
       if(!j.values || !j.values.length) throw new Error('no values for '+tdSym);
       const vals=j.values.reverse();
-      console.log('twelve ok',tdSym, vals.length);
+      const sampleClose=parseFloat(vals[0].close);
+      if((tdSym==='NDX' || tdSym==='IXIC') && sampleClose < 5000){ throw new Error('twelve demo data '+sampleClose); }
+      console.log('twelve ok',tdSym, vals.length, 'sample',sampleClose);
       return vals.map(v=>({time:Math.floor(new Date(v.datetime).getTime()/1000), open:parseFloat(v.open), high:parseFloat(v.high), low:parseFloat(v.low), close:parseFloat(v.close)}));
     }catch(e){ console.warn('twelve try',tdSym,'fail',e.message); continue; }
   }
@@ -711,25 +714,25 @@ async function fetchRealCandles(symbol, tf){
   const tfNum=parseInt(tf);
   // BTC via Binance live (CORS OK) + CoinGecko fallback
   if(symbol==='BTCUSD'){
-    try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance btc fail',e); }
-    try{ const d=await fetchCoinGeckoKlines(tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('coingecko fail',e); }
+    try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; liveSource='BINANCE'; return d; }catch(e){ console.warn('binance btc fail',e); }
+    try{ const d=await fetchCoinGeckoKlines(tfNum, 300); liveMode=true; liveSource='COINGECKO'; return d; }catch(e){ console.warn('coingecko fail',e); }
   }
   // XAU via Binance PAXG (gold proxy, CORS OK) — avoids Yahoo CORS block
   if(symbol==='XAUUSD'){
-    try{ const d=await fetchBinanceKlines('PAXGUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance paxg fail',e); }
-    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+    try{ const d=await fetchBinanceKlines('PAXGUSDT', tfNum, 300); liveMode=true; liveSource='BINANCE'; return d; }catch(e){ console.warn('binance paxg fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   if(symbol==='EURUSD'){
-    try{ const d=await fetchBinanceKlines('EURUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance eur fail',e); }
-    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+    try{ const d=await fetchBinanceKlines('EURUSDT', tfNum, 300); liveMode=true; liveSource='BINANCE'; return d; }catch(e){ console.warn('binance eur fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   if(symbol==='GBPUSD'){
-    try{ const d=await fetchBinanceKlines('GBPUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance gbp fail',e); }
-    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+    try{ const d=await fetchBinanceKlines('GBPUSDT', tfNum, 300); liveMode=true; liveSource='BINANCE'; return d; }catch(e){ console.warn('binance gbp fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   if(['GER40','NAS100'].includes(symbol)){
-    try{ const d=await fetchTwelveKlines(symbol, tfNum, 300); liveMode=true; try{localStorage.setItem('twelve_key', document.getElementById('twelveKey')?.value||'')}catch{} return d; }catch(e){ console.warn('twelve fail',e); }
-    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+    try{ const d=await fetchTwelveKlines(symbol, tfNum, 300); liveMode=true; liveSource='TWELVEDATA'; try{localStorage.setItem('twelve_key', document.getElementById('twelveKey')?.value||'')}catch{} return d; }catch(e){ console.warn('twelve fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
 }
@@ -751,7 +754,7 @@ async function loadRealChart(){
       chart.timeScale().fitContent();
       document.getElementById('priceBadge').textContent='$'+candles[candles.length-1].close.toFixed(2);
     }
-    if(badge){ badge.textContent= liveMode ? 'LIVE • '+(sym==='BTCUSD'?'BINANCE':'YAHOO')+' • TRADINGVIEW MCP' : 'MOCK • OFFLINE'; badge.style.color= liveMode ? 'var(--neon)' : 'var(--muted)'; badge.style.borderColor= liveMode ? 'var(--neon)' : 'var(--line)'; }
+    if(badge){ badge.textContent= liveMode ? 'LIVE • '+liveSource+' • TRADINGVIEW MCP' : 'MOCK • OFFLINE'; badge.style.color= liveMode ? 'var(--neon)' : 'var(--muted)'; badge.style.borderColor= liveMode ? 'var(--neon)' : 'var(--line)'; }
   }catch(e){
     console.warn('loadRealChart fail',e);
     if(badge){ badge.textContent='MOCK • '+ (e.message.includes('twelve') ? 'TWELVE ERR' : 'LIVE UNAVAILABLE'); badge.style.color='var(--muted)'; badge.style.borderColor='var(--line)'; badge.title=e.message; }
