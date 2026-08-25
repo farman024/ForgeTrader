@@ -205,7 +205,7 @@ a{color:var(--gold2)}
     <div class="nav-tab" data-view="trade">DEMO TRADE</div>
     <div class="nav-tab" data-view="backtest">BACKTEST</div>
     <div class="nav-tab" data-view="journal">JOURNAL</div>
-    <div class="nav-tab" data-view="profile">PROFILE</div>
+    <div class="nav-tab" data-view="settings">SETTINGS</div>
   </div>
   <div class="nav-right">
     <div class="hud mono" style="display:flex;align-items:center;gap:8px"><span class="live-dot"></span> LIVE <span style="color:var(--muted)">FEED</span> <b id="hudLvl">1</b> • <b id="hudXp">0</b> XP</div>
@@ -384,28 +384,12 @@ a{color:var(--gold2)}
 
   <!-- JOURNAL -->
   <section id="view-journal" class="view">
-    <div class="grid g2">
-      <div class="card">
-        <div class="card-h">PROGRESSION <span class="badge" id="jRank">E-RANK</span></div>
-        <div class="progress"><i id="jProg"></i></div>
-        <div class="small muted" id="jProgText" style="margin-top:6px"></div>
-        <div class="sep"></div>
-        <div id="jStats" class="small" style="line-height:1.8"></div>
-      </div>
-      <div class="card" style="border-color:var(--purple)">
-        <div class="card-h">CLOUD SYNC — SUPABASE WORLDWIDE <span class="badge" id="syncStatus" style="border-color:var(--neon);color:var(--neon)">OFFLINE</span></div>
-        <div class="small muted" style="margin-bottom:8px">Project: <b style="color:var(--text)">sgrvzuokqtkbwfgqlfml.supabase.co</b> • Worldwide — your XP/streak/trades sync across devices.</div>
-        <label class="small" style="display:block">Supabase URL<input id="supaUrl" value="https://sgrvzuokqtkbwfgqlfml.supabase.co" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
-        <label class="small" style="display:block;margin-top:8px">Anon Key<input id="supaKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok" type="password" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
-        <label class="small" style="display:block;margin-top:8px">Sync Passcode (your worldwide ID)<input id="syncPass" placeholder="e.g. farman123" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveSyncConfig()">SAVE</button><button class="btn" onclick="backupToSupabase()">BACKUP NOW</button><button class="btn" onclick="restoreFromSupabase()">RESTORE</button></div>
-        <div id="syncMsg" class="small muted" style="margin-top:8px"></div>
-      </div>
-      <div class="card">
-        <div class="card-h">EXPORT <span class="small muted">PWA-ready • localStorage</span></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportData()">EXPORT JSON</button><button class="btn" onclick="resetAll()">RESET (keep rank?)</button></div>
-        <div class="small muted" style="margin-top:8px">Local backup — Supabase is worldwide.</div>
-      </div>
+    <div class="card">
+      <div class="card-h">PROGRESSION <span class="badge" id="jRank">E-RANK</span></div>
+      <div class="progress"><i id="jProg"></i></div>
+      <div class="small muted" id="jProgText" style="margin-top:6px"></div>
+      <div class="sep"></div>
+      <div id="jStats" class="small" style="line-height:1.8"></div>
     </div>
     <div class="card" style="margin-top:14px">
       <div class="card-h">TRADE LOG — All paper trades</div>
@@ -413,8 +397,12 @@ a{color:var(--gold2)}
     </div>
   </section>
 
-  <!-- PROFILE -->
-  <section id="view-profile" class="view">
+  <!-- SETTINGS -->
+  <section id="view-settings" class="view">
+    <div class="card" style="border-color:var(--purple);background:linear-gradient(180deg, rgba(15,18,48,.9), rgba(7,10,30,.95))">
+      <div class="card-h">SETTINGS — TRADER CONTROL CENTER <span class="badge badge-gold">WORLDWIDE</span></div>
+      <div class="small muted">One place for account, profile, data & app. Changes sync worldwide when signed in.</div>
+    </div>
     <div class="grid g2">
       <div class="card" style="border-color:var(--purple)">
         <div class="card-h">PROFILE — TRADER IDENTITY <span class="badge" id="authStatus">GUEST</span></div>
@@ -450,6 +438,24 @@ a{color:var(--gold2)}
         </label>
         <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" onclick="saveProfile()">SAVE PROFILE</button><button class="btn" onclick="loadProfile()">LOAD</button></div>
         <div id="profileMsg" class="small muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card" style="border-color:var(--purple)">
+        <div class="card-h">CLOUD SYNC — SUPABASE WORLDWIDE <span class="badge" id="syncStatus" style="border-color:var(--neon);color:var(--neon)">OFFLINE</span></div>
+        <div class="small muted" style="margin-bottom:8px">Project: <b style="color:var(--text)">sgrvzuokqtkbwfgqlfml.supabase.co</b> • Worldwide — your XP/streak/trades sync across devices.</div>
+        <label class="small" style="display:block">Supabase URL<input id="supaUrl" value="https://sgrvzuokqtkbwfgqlfml.supabase.co" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <label class="small" style="display:block;margin-top:8px">Anon Key<input id="supaKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok" type="password" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <label class="small" style="display:block;margin-top:8px">Sync Passcode (your worldwide ID)<input id="syncPass" placeholder="e.g. farman123" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveSyncConfig()">SAVE</button><button class="btn" onclick="backupToSupabase()">BACKUP NOW</button><button class="btn" onclick="restoreFromSupabase()">RESTORE</button></div>
+        <div id="syncMsg" class="small muted" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <div class="card-h">DATA & APP <span class="small muted">local + PWA</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportData()">EXPORT JSON</button><button class="btn" onclick="resetAll()">RESET</button></div>
+        <div class="small muted" style="margin-top:8px">Local backup — Supabase is worldwide. PWA install via browser menu.</div>
+        <div class="sep"></div>
+        <div class="small muted">Sound: <b id="settingsSoundStatus">ON</b> — toggle in nav <span class="badge">SOUND: ON/OFF</span></div>
       </div>
     </div>
     <div class="card" id="migrateCard" style="margin-top:14px">
