@@ -671,7 +671,15 @@ async function fetchRealCandles(symbol, tf){
     try{ const d=await fetchBinanceKlines('PAXGUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance paxg fail',e); }
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
-  if(['EURUSD','GBPUSD','GER40','NAS100'].includes(symbol)){
+  if(symbol==='EURUSD'){
+    try{ const d=await fetchBinanceKlines('EURUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance eur fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+  }
+  if(symbol==='GBPUSD'){
+    try{ const d=await fetchBinanceKlines('GBPUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance gbp fail',e); }
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+  }
+  if(['GER40','NAS100'].includes(symbol)){
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
