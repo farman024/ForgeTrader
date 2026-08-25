@@ -662,17 +662,17 @@ async function fetchYahooKlines(symbol, interval, limit=300){
 }
 async function fetchRealCandles(symbol, tf){
   const tfNum=parseInt(tf);
-  // BTC via Binance live
+  // BTC via Binance live (CORS OK)
   if(symbol==='BTCUSD'){
-    try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance fail',e); }
+    try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance btc fail',e); }
   }
-  // XAU/EUR/GBP try Yahoo first
-  if(['XAUUSD','EURUSD','GBPUSD','GER40'].includes(symbol)){
+  // XAU via Binance PAXG (gold proxy, CORS OK) — avoids Yahoo CORS block
+  if(symbol==='XAUUSD'){
+    try{ const d=await fetchBinanceKlines('PAXGUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance paxg fail',e); }
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
-  // NAS100 via Yahoo ^IXIC proxy
-  if(symbol==='NAS100'){
-    try{ const d=await fetchYahooKlines('NAS100', tfNum, 300); liveMode=true; return d; }catch(e){}
+  if(['EURUSD','GBPUSD','GER40','NAS100'].includes(symbol)){
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
 }
@@ -696,7 +696,7 @@ async function loadRealChart(){
     }
     if(badge){ badge.textContent= liveMode ? 'LIVE • '+(sym==='BTCUSD'?'BINANCE':'YAHOO')+' • TRADINGVIEW MCP' : 'MOCK • OFFLINE'; badge.style.color= liveMode ? 'var(--neon)' : 'var(--muted)'; badge.style.borderColor= liveMode ? 'var(--neon)' : 'var(--line)'; }
   }catch(e){
-    if(badge){ badge.textContent='LIVE FETCH FAILED — MOCK'; badge.style.color='var(--red)'; }
+    if(badge){ badge.textContent='MOCK • LIVE UNAVAILABLE'; badge.style.color='var(--muted)'; badge.style.borderColor='var(--line)'; }
   }
 }
 function initChart(){
