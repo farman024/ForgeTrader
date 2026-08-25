@@ -177,6 +177,25 @@ a{color:var(--gold2)}
 </head>
 <body>
 <canvas id="ambient" width="1200" height="800"></canvas>
+<!-- AUTH GATE — shows on open if not signed in -->
+<div id="authGate" style="position:fixed;inset:0;background:rgba(6,8,24,.88);backdrop-filter:blur(10px);z-index:95;display:none;place-items:center;padding:16px">
+  <div style="background:linear-gradient(180deg, #0f1230, #070a1e);border:1px solid var(--purple);border-radius:14px;max-width:420px;width:100%;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 32px rgba(124,58,237,.28);text-align:center">
+    <img src="logo.png" style="width:56px;height:56px;border-radius:10px;border:1px solid var(--line);margin:0 auto 10px;display:block">
+    <div style="font-weight:900;letter-spacing:.08em">FORGE<span style="color:var(--gold2)">TRADER</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-top:4px">Worldwide demo trading school — sign in to keep XP worldwide</div>
+    <div style="margin-top:14px;text-align:left">
+      <label class="small">Email (Gmail)<input id="gateEmail" type="email" placeholder="you@gmail.com" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
+      <label class="small" style="display:block;margin-top:8px">Password<input id="gatePass" type="password" placeholder="••••••••" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" onclick="gateSignUp()">SIGN UP</button>
+        <button class="btn" onclick="gateSignIn()">SIGN IN</button>
+      </div>
+      <div id="gateMsg" class="small muted" style="margin-top:8px;text-align:center;min-height:16px"></div>
+      <div style="text-align:center;margin-top:10px"><button class="btn btn-sm" style="background:transparent;border-color:var(--line)" onclick="continueAsGuest()">Continue as Guest →</button></div>
+      <div class="small muted" style="text-align:center;margin-top:6px">Guest = local only. Sign in = XP sync worldwide.</div>
+    </div>
+  </div>
+</div>
 <nav class="nav">
   <div class="nav-logo"><img src="logo.png" alt="ForgeTrader"><b>FORGE</b>TRADER <span><span class="live-dot"></span> DEMO • PAPER ONLY</span></div>
   <div class="nav-tabs" id="tabs">
@@ -400,17 +419,13 @@ a{color:var(--gold2)}
       <div class="card" style="border-color:var(--purple)">
         <div class="card-h">PROFILE — TRADER IDENTITY <span class="badge" id="authStatus">GUEST</span></div>
         <div id="authBox">
-          <div class="small muted" style="margin-bottom:10px">Sign in with email (Gmail works) — worldwide sync. Your XP & trades follow your account, not your device.</div>
-          <label class="small">Email (Gmail)<input id="authEmail" type="email" placeholder="you@gmail.com" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
-          <label class="small" style="display:block;margin-top:8px">Password<input id="authPass" type="password" placeholder="••••••••" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
-            <button class="btn btn-primary" onclick="authSignUp()">SIGN UP</button>
-            <button class="btn" onclick="authSignIn()">SIGN IN</button>
+          <div class="small muted" style="margin-bottom:10px">Signed in worldwide — manage here. To switch account, sign out and you’ll see the gate again.</div>
+          <div class="small muted">Signed in as: <b id="authUserEmail" style="color:var(--text)">— guest —</b> <span id="authUserId" class="small muted"></span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
             <button class="btn" onclick="authSignOut()">SIGN OUT</button>
+            <button class="btn" onclick="document.getElementById('authGate').style.display='grid'">SWITCH ACCOUNT</button>
           </div>
           <div id="authMsg" class="small muted" style="margin-top:8px"></div>
-          <div class="sep"></div>
-          <div class="small muted">Signed in as: <b id="authUserEmail" style="color:var(--text)">— guest —</b> <span id="authUserId" class="small muted"></span></div>
         </div>
       </div>
       <div class="card">
@@ -1053,8 +1068,42 @@ async function authSignIn(){
 }
 async function authSignOut(){
   const supa=getSupaClient(); await supa.auth.signOut();
-  setAuthMsg('Signed out','ok'); updateAuthUI();
+  localStorage.removeItem('ft_guest'); setAuthMsg('Signed out','ok'); updateAuthUI(); showGateIfNeeded();
 }
+function setGateMsg(m,type){
+  const el=document.getElementById('gateMsg'); if(!el) return; el.textContent=m; el.style.color= type==='ok'?'var(--neon)': type==='err'?'var(--red)':'var(--muted)';
+}
+async function gateSignUp(){
+  const email=document.getElementById('gateEmail').value.trim();
+  const pass=document.getElementById('gatePass').value.trim();
+  if(!email||!pass) return setGateMsg('Fill email + password','err');
+  setGateMsg('Creating account...','');
+  const supa=getSupaClient(); const {error}=await supa.auth.signUp({email,password:pass});
+  if(error) return setGateMsg(error.message,'err');
+  setGateMsg('Sign up OK — check Gmail to confirm, then Sign In','ok'); toast('Check Gmail to confirm');
+}
+async function gateSignIn(){
+  const email=document.getElementById('gateEmail').value.trim();
+  const pass=document.getElementById('gatePass').value.trim();
+  if(!email||!pass) return setGateMsg('Fill email + password','err');
+  setGateMsg('Signing in...','');
+  const supa=getSupaClient(); const {data,error}=await supa.auth.signInWithPassword({email,password:pass});
+  if(error) return setGateMsg(error.message,'err');
+  setGateMsg('Signed in — '+data.user.email,'ok'); hideGate(); updateAuthUI(); toast('Welcome '+data.user.email);
+}
+function continueAsGuest(){
+  localStorage.setItem('ft_guest','1'); hideGate(); toast('Continuing as Guest — local only');
+}
+function hideGate(){ const g=document.getElementById('authGate'); if(g) g.style.display='none'; }
+function showGateIfNeeded(){
+  getSupaClient().auth.getUser().then(({data:{user}})=>{
+    const isGuest=localStorage.getItem('ft_guest')==='1';
+    const gate=document.getElementById('authGate');
+    if(!user && !isGuest && gate) gate.style.display='grid';
+    else if(gate) gate.style.display='none';
+  });
+}
+setTimeout(showGateIfNeeded, 700);
 function setAuthMsg(m,type){
   const el=document.getElementById('authMsg'); if(el){el.textContent=m; el.style.color= type==='ok'?'var(--neon)': type==='err'?'var(--red)':'var(--muted)'}
   const badge=document.getElementById('authStatus'); if(badge){badge.textContent= type==='ok' ? 'SIGNED IN' : type==='err' ? 'ERROR' : 'IDLE'}
