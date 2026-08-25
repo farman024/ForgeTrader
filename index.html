@@ -6,6 +6,22 @@
 <title>ForgeTrader — Learn Trading. For Real. For Free.</title>
 <meta name="theme-color" content="#0a0c1e">
 <link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="ForgeTrader — gamified demo trading school. Learn charts, risk, strategy with TradingView MCP + MT5 demo + Hunter E→S ranks. No real money.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://forgetrader.xyz/">
+<meta property="og:title" content="ForgeTrader — Learn Trading. For Real. For Free.">
+<meta property="og:description" content="Gamified demo trading school — TradingView + MT5 + Hunter ranks. Paper trading, backtests, XP & streaks. No real money.">
+<meta property="og:image" content="https://forgetrader.xyz/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ForgeTrader — Learn Trading. For Real. For Free.">
+<meta name="twitter:description" content="Gamified demo trading school — XP, streaks, backtests, paper trading. No real money.">
+<meta name="twitter:image" content="https://forgetrader.xyz/og-image.png">
 <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -33,7 +49,11 @@ a{color:var(--gold2)}
 .grid{display:grid;gap:14px}
 .g2{grid-template-columns:1fr 1fr}
 .g3{grid-template-columns:repeat(3,1fr)}
-@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.nav-tabs{margin-left:10px}.nav-right .hud{display:none}}
+@media(max-width:900px){.g2,.g3{grid-template-columns:1fr}.nav-tabs{margin-left:10px}.nav-right .hud{display:none};#chart{height:320px} .mcp{grid-template-columns:1fr} .terminal{grid-template-columns:1fr} .hero h1{font-size:22px} .btn{min-height:44px} .level-grid{grid-template-columns:1fr 1fr} .nav{height:52px;padding:0 10px} .nav-logo{font-size:13px} .nav-tab{padding:7px 10px;font-size:11px} .wrap{padding:12px 10px}}
+@media(max-width:560px){.level-grid{grid-template-columns:1fr} .statrow .stat{min-width:0;flex:1} #chart{height:280px} .bt-chart{height:280px} .hero{padding:14px}}
+.nav-tabs{scrollbar-width:none;-ms-overflow-style:none} .nav-tabs::-webkit-scrollbar{display:none} .nav{scrollbar-width:none}
+#lessonModal .card{max-height:88vh;overflow:auto}
+#toast{max-width:92vw;text-align:center}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
 .card-h{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em}
@@ -427,8 +447,8 @@ function renderQuiz(id){
     const b=document.createElement('button'); b.textContent=o;
     b.onclick=()=>{
       const r=document.getElementById(`qr-${id}`);
-      if(i===data.a){b.classList.add('correct'); r.textContent='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg> Correct — +50 XP bonus'; r.style.color='var(--green)'; addXp(50,`Level ${id} trial`)}
-      else {b.classList.add('wrong'); r.textContent='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg> Try again — hint: re-read the lesson'; r.style.color='var(--red)'}
+      if(i===data.a){b.classList.add('correct'); r.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00e38c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M5 13l4 4L19 7"/></svg> Correct — +50 XP bonus'; r.style.color='var(--green)'; addXp(50,`Level ${id} trial`)}
+      else {b.classList.add('wrong'); r.innerHTML='<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg> Try again — hint: re-read the lesson'; r.style.color='var(--red)'}
     };
     box.appendChild(b);
   })
@@ -440,23 +460,23 @@ function openLevel(id){ // scroll to that level in learn view
 function openLesson(lid,idx,title){
   activeLesson=`${lid}-${idx}`;
   const content={
-    'What is a market?': 'A market is where buyers and sellers agree on price. Forex = currencies, Crypto = coins, Indices = baskets of stocks. Price moves because of imbalance — more buyers than sellers → up.',
-    'Demo vs Real money': 'Demo = paper money, same price as real, zero risk. ForgeTrader is DEMO ONLY. You learn execution, risk, emotions — before real capital.',
-    'The 1% risk rule': 'Never risk more than 1% per trade. $10k account → max $100 loss per trade. This lets you survive 20 losses and still trade. Pros survive first, profit second.',
-    'Candlesticks decoded': 'Each candle = open/high/low/close for that timeframe. Green = buyers won, Red = sellers won. Wicks = rejection.',
-    'Timeframes': '1m = noise, 1H = intraday, 1D = trend. Beginners: stick to 1H/4H/1D. Lower TF = more fakeouts.',
-    'S/R + Trendlines': 'Support = floor buyers defend, Resistance = ceiling sellers defend. Trendline connects higher lows (uptrend). Break + retest = signal.',
-    'Lot size math': 'Lot size = risk $ / (stop distance * pip value). ForgeTrader auto-calcs if you enter SL $. Don’t guess size.',
-    'Stop & Take Profit': 'Stop = where you are wrong (beyond structure). Take profit = 2x your risk (1:2 RR). Let winners run.',
-    'Risk/Reward 1:2+': 'Risk $10 to make $20+. One win erases two losses. Edge = RR + win rate. 40% wins at 1:2 = profitable.',
-    'RSI 30/70': 'RSI = momentum 0-100. <30 oversold (bounce may come), >70 overbought (pullback risk). Not a signal alone — confirm with price structure.',
-    'MA Cross': 'SMA20 above SMA50 = uptrend bias, below = downtrend. Cross = early trend hint. Use with S/R, not alone.',
-    'Bollinger Bands': 'Middle = SMA20, outer = volatility. Price hugging upper = strong trend or overbought, at lower = oversold. Squeeze = breakout coming.',
-    'Your first backtest': 'Backtest = test strategy on past data. Does it win? ForgeTrader backtest lab runs SMA/RSI/Bollinger on 500 candles — see win rate instantly.',
-    'Forward test demo': 'Forward test = trade live demo for 20 trades without tweaking. If backtest + forward match, you have an edge.',
-    'Boss: 10 R in profit': 'Boss challenge: make 10R (10x your risk) in paper P/L. If you risk $10/trade, need $100 profit. Takes discipline, not luck.',
+    'What is a market?': '<b>Market = agreed price.</b> 3 types you will trade here: <b>Forex</b> (EUR/USD moves on rates), <b>Crypto</b> (BTC moves on liquidity), <b>Indices</b> (NAS100 = 100 stocks). Price moves only for one reason: imbalance. More buyers than sellers at a price → green candle. Drill: open Chart → watch 1H XAUUSD ticks for 2 min, notice wicks = rejection.',
+    'Demo vs Real money': '<b>Demo = same price, fake money.</b> ForgeTrader is <b>paper-only $10k</b> — zero deposits. You learn buttons (Buy/Sell, SL/TP), emotions, and journaling without blowing capital. Example: lose 5 trades in demo = -$80 but 0 stress vs real -$80 panic. Rule: 20 demo wins at 1:2 RR before even thinking real.',
+    'The 1% risk rule': '<b>1% = survive.</b> $10k → max $100 loss per trade. Formula: <code>lots = $risk / (stop pips × $/pip)</code>. In ForgeTrader enter SL $10 → we size lots auto. With 1%, you survive 20 losses in a row (you will have streaks) and still have $8k. Pros don’t chase — they survive.',
+    'Candlesticks decoded': '<b>1 candle = 1 battle.</b> Body = open→close (who won), wicks = highs/lows (rejection). Green close > open = buyers won; red = sellers. Long lower wick = buyers defended. Tip: on 1H chart, toggle SMA20, see how candles respect or slice the line. Do 5 screenshots today and label wicks.',
+    'Timeframes': '<b>Timeframe = zoom.</b> 1m = noise (100 fakeouts/hour), 1H = intraday (3-4 setups/day), 1D = trend (1 setup/week). Beginners: live on <b>1H + 4H + 1D</b>. Multi-timeframe rule: D trend → 4H pullback → 1H entry. Try: switch TF on chart from 1H to 1D and watch structure change.',
+    'S/R + Trendlines': '<b>Support = floor, Resistance = ceiling.</b> 3 touches = strong. Trendline = connect higher lows (up) or lower highs (down). Signal = <b>break + retest</b> (price breaks level, comes back, holds). Exercise: draw a horizontal line on chart where price bounced 3 times — that is S/R. Mark it.',
+    'Lot size math': '<b>Lots = risk ÷ distance.</b> Risk $10, stop 20 pips, XAU $0.10/pip/lot → lots 0.10. ForgeTrader: enter SL $ field → we size. Never flat 0.10 everywhere — volatile BTC needs smaller lots than EURUSD. Quiz yourself: $100 risk / 10 pips = ? (hint: 1.0).',
+    'Stop & Take Profit': '<b>SL = you are wrong, TP = you are right.</b> SL goes <i>beyond structure</i> (below support for longs), not random. TP = 2× risk (if SL $10, TP $20). Set both before clicking Buy/Sell in Demo Trade terminal. Win 40% at 1:2 = profitable. Let winners run — don’t close early.',
+    'Risk/Reward 1:2+': '<b>RR = edge.</b> 1:2 means 1 loser erased by 0.5 winner. Math: 10 trades, 4 wins (+$80), 6 losses (-$60) = +$20. At 1:1 you need 55% wins; at 1:2 you need 34%. ForgeTrader journal shows your PF. Goal: never take <1:2.',
+    'RSI 30/70': '<b>RSI 14: momentum 0-100.</b> 30 = oversold (sellers exhausted, bounce may), 70 = overbought (buyers tired). Not a signal alone — need price: RSI 28 + bullish engulfing at support = buy. On chart enable RSI, see how RSI >70 caps rallies. Avoid chasing >70.',
+    'MA Cross': '<b>SMA20 vs SMA50: trend bias.</b> 20 above 50 = uptrend (only look longs), below = downtrend. Cross = early hint. Use with S/R: cross + retest of MA = entry. On chart toggle SMA20, switch to 4H, see how price rides MA in trends and chops in ranges.',
+    'Bollinger Bands': '<b>Middle = SMA20, bands = volatility (±2 SD).</b> Wide = volatile, narrow = squeeze → breakout coming. Price at upper band = stretched, at lower = oversold. Strategy: squeeze + break + close outside band = momentum. Toggle BB on chart and watch squeeze before moves.',
+    'Your first backtest': '<b>Backtest = prove it.</b> 500 candles, SMA Cross gave 42 trades, 54% WR, PF 1.4 in mock. Run yours: Backtest Lab → pick RSI/BB/SMA → Run → see markers. Does it hold on XAU vs BTC? If WR <45% or PF <1.2, discard. Backtest before you believe.',
+    'Forward test demo': '<b>Forward = live paper.</b> Take 20 demo trades exactly as backtested — no tweaks mid-way. Journal each: entry, SL, TP, emotion. If live WR is within 5% of backtest WR, you have an edge. If not, you overfit. ForgeTrader Journal tracks this auto.',
+    'Boss: 10 R in profit': '<b>Boss = 10R paper profit.</b> Risk $10/trade → need +$100 net. Takes ~20-30 disciplined trades at 1:2. No revenge, no over-size. Pass this and you’ve survived what 90% don’t. Badge unlocks S-Rank progress. Hint: journal every loss.',
   }[title]||'Lesson content — practice on chart after reading.';
-  const w=document.createElement('div'); w.style.position='fixed';w.style.inset='0';w.style.background='rgba(0,0,0,.6)';w.style.display='grid';w.style.placeItems='center';w.style.zIndex='60';w.id='lessonModal';
+  const w=document.createElement('div'); w.style.position='fixed';w.style.inset='0';w.style.background='rgba(0,0,0,.65)';w.style.display='grid';w.style.placeItems='center';w.style.zIndex='60';w.id='lessonModal';
   w.innerHTML=`<div class="card" style="max-width:560px;width:92%"><div class="card-h">${title} <button class="btn btn-sm" onclick="closeLesson()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" style="vertical-align:-2px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div><p class="small" style="line-height:1.7">${content}</p><div class="sep"></div><div style="display:flex;gap:8px"><button class="btn btn-primary" onclick="completeLesson()">MARK DONE +100 XP</button><button class="btn" onclick="closeLesson()">Close</button><button class="btn" onclick="closeLesson();switchView('chart')">OPEN CHART</button></div></div>`;
   w.onclick=(e)=>{ if(e.target===w) closeLesson()};
   document.body.appendChild(w);
@@ -728,6 +748,10 @@ function switchView(name){
   if(name==='backtest' && !btChart) setTimeout(initBacktest,80);
 }
 document.querySelectorAll('.nav-tab').forEach(t=> t.addEventListener('click',()=> switchView(t.dataset.view)));
+
+// --- PWA ---
+if('serviceWorker' in navigator){ window.addEventListener('load',()=> navigator.serviceWorker.register('./sw.js').catch(()=>{})); }
+let deferredPrompt=null; window.addEventListener('beforeinstallprompt',e=>{e.preventDefault(); deferredPrompt=e; const b=document.createElement('button'); b.textContent='Install ForgeTrader'; b.className='btn btn-primary'; b.style.position='fixed'; b.style.bottom='14px'; b.style.right='14px'; b.style.zIndex='70'; b.onclick=()=>{deferredPrompt.prompt(); deferredPrompt.userChoice.then(()=>{b.remove()})}; document.body.appendChild(b); setTimeout(()=>b.remove(), 12000)});
 
 // --- INIT ---
 renderLevels(); renderLearn(); renderBadges(); updateHud(); renderTrades(); updateSessions(); setInterval(updateSessions,60000);
