@@ -746,10 +746,31 @@ function tickPrice(){
 }
 
 // --- MCP CHAT MOCK ---
+async function fetchTopGainersReal(){
+  try{
+    const res=await fetch('https://api.binance.com/api/v3/ticker/24hr');
+    if(!res.ok) throw new Error();
+    const data=await res.json();
+    const filtered=data.filter(d=>d.symbol.endsWith('USDT') && parseFloat(d.quoteVolume)>5000000);
+    filtered.sort((a,b)=> parseFloat(b.priceChangePercent)-parseFloat(a.priceChangePercent));
+    const top=filtered.slice(0,3);
+    return top.map((d,i)=> `${i+1}. ${d.symbol.replace('USDT','')} ${parseFloat(d.priceChangePercent)>=0?'+':''}${parseFloat(d.priceChangePercent).toFixed(1)}% • ${parseFloat(d.lastPrice).toFixed(2)} • VOL ${(parseFloat(d.quoteVolume)/1e6).toFixed(1)}M`).join('<br>');
+  }catch{ return null; }
+}
 function sendChat(){
   const inp=document.getElementById('chatIn'); const q=inp.value.trim(); if(!q) return;
   addChat('user', q); inp.value='';
-  setTimeout(()=> addChat('bot', mcpReply(q)), 400);
+  setTimeout(async()=>{
+    if(q.toLowerCase().includes('top')||q.toLowerCase().includes('gainer')||q.toLowerCase().includes('screener')){
+      addChat('bot', 'Fetching live Binance screener...');
+      const real=await fetchTopGainersReal();
+      const log=document.getElementById('chatLog'); if(log.lastChild) log.removeChild(log.lastChild);
+      if(real) addChat('bot', `<b>Top gainers (Binance LIVE):</b><br>${real}<br><span class="muted small">Tool: tradingview-mcp • screener • LIVE</span>`);
+      else addChat('bot', mcpReply(q));
+      return;
+    }
+    addChat('bot', mcpReply(q));
+  }, 400);
 }
 document.getElementById('chatIn')?.addEventListener('keydown',e=>{ if(e.key==='Enter') sendChat()});
 function addChat(who, text){
@@ -974,6 +995,26 @@ function tickTicker(){
   renderTicker();
 }
 renderTicker(); setInterval(tickTicker, 1800);
+async function refreshRealTicker(){
+  try{
+    const res=await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=[%22BTCUSDT%22,%22ETHUSDT%22,%22BNBUSDT%22,%22SOLUSDT%22]');
+    if(!res.ok) return;
+    const data=await res.json();
+    const map={BTCUSDT:'BTCUSD', ETHUSDT:'ETHUSD', BNBUSDT:'BNBUSD', SOLUSDT:'SOLUSD'};
+    data.forEach(d=>{
+      const sym=map[d.symbol];
+      const item=TICKER_SYMS.find(x=>x.s===sym);
+      if(item){ item.p=parseFloat(d.lastPrice); item.d=parseFloat(d.priceChangePercent); }
+      // also update BTCUSD main
+      if(d.symbol==='BTCUSDT'){
+        const btc=TICKER_SYMS.find(x=>x.s==='BTCUSD'); if(btc){ btc.p=parseFloat(d.lastPrice); btc.d=parseFloat(d.priceChangePercent); }
+      }
+    });
+    // ensure BTCUSD exists
+    renderTicker();
+  }catch{}
+}
+refreshRealTicker(); setInterval(refreshRealTicker, 15000);
 
 // --- AMBIENT MESH ---
 (function(){
