@@ -731,8 +731,8 @@ async function fetchRealCandles(symbol, tf){
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   if(['GER40','NAS100'].includes(symbol)){
-    try{ const d=await fetchTwelveKlines(symbol, tfNum, 300); liveMode=true; liveSource='TWELVEDATA'; try{localStorage.setItem('twelve_key', document.getElementById('twelveKey')?.value||'')}catch{} return d; }catch(e){ console.warn('twelve fail',e); }
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; liveSource='YAHOO'; return d; }catch(e){ console.warn('yahoo fail',e); }
+    try{ const d=await fetchTwelveKlines(symbol, tfNum, 300); liveMode=true; liveSource='TWELVEDATA'; try{localStorage.setItem('twelve_key', document.getElementById('twelveKey')?.value||'')}catch{} return d; }catch(e){ console.warn('twelve fail',e); }
   }
   liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
 }
