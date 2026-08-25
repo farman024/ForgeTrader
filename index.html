@@ -639,8 +639,70 @@ function rsi(data, period=14){
   // align length
   const aligned=[null,...out]; while(aligned.length < data.length) aligned.unshift(null); return aligned.slice(-data.length);
 }
+// --- LIVE FEED (Binance + Yahoo) ---
+const LIVE_INTERVAL_MAP={1:'1m',5:'5m',15:'15m',60:'1h',240:'4h',1440:'1d'};
+let liveMode=false;
+async function fetchBinanceKlines(symbol, interval, limit=300){
+  const iv=LIVE_INTERVAL_MAP[interval]||'1h';
+  const url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${iv}&limit=${limit}`;
+  const res=await fetch(url); if(!res.ok) throw new Error('binance '+res.status);
+  const data=await res.json();
+  return data.map(k=>({time:Math.floor(k[0]/1000), open:parseFloat(k[1]), high:parseFloat(k[2]), low:parseFloat(k[3]), close:parseFloat(k[4])}));
+}
+async function fetchYahooKlines(symbol, interval, limit=300){
+  // symbol: GC=F for Gold, EURUSD=X
+  const ySym = symbol==='XAUUSD' ? 'GC=F' : symbol==='EURUSD' ? 'EURUSD=X' : symbol==='GBPUSD' ? 'GBPUSD=X' : symbol==='GER40' ? '^GDAXI' : 'GC=F';
+  const range = interval>=1440 ? '3mo' : interval>=240 ? '1mo' : '7d';
+  const iv = interval==1 ? '1m' : interval==5 ? '5m' : interval==15 ? '15m' : interval==60 ? '60m' : interval==240 ? '90m' : '1d';
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${ySym}?interval=${iv}&range=${range}`;
+  const res=await fetch(url); if(!res.ok) throw new Error('yahoo '+res.status);
+  const j=await res.json(); const r=j.chart.result[0]; const ts=r.timestamp; const q=r.indicators.quote[0];
+  const out=[]; for(let i=0;i<ts.length;i++){ if(q.open[i]==null) continue; out.push({time:ts[i], open:q.open[i], high:q.high[i], low:q.low[i], close:q.close[i]}); }
+  return out.slice(-limit);
+}
+async function fetchRealCandles(symbol, tf){
+  const tfNum=parseInt(tf);
+  // BTC via Binance live
+  if(symbol==='BTCUSD'){
+    try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance fail',e); }
+  }
+  // XAU/EUR/GBP try Yahoo first
+  if(['XAUUSD','EURUSD','GBPUSD','GER40'].includes(symbol)){
+    try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
+  }
+  // NAS100 via Yahoo ^IXIC proxy
+  if(symbol==='NAS100'){
+    try{ const d=await fetchYahooKlines('NAS100', tfNum, 300); liveMode=true; return d; }catch(e){}
+  }
+  liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
+}
+async function loadRealChart(){
+  const sym=document.getElementById('symSel').value;
+  const tf=document.getElementById('tfSel').value;
+  const el=document.getElementById('chart');
+  const badge=document.getElementById('mt5Badge');
+  if(badge){ badge.textContent='FETCHING LIVE...'; badge.style.color='var(--muted)'; }
+  try{
+    const real=await fetchRealCandles(sym, tf);
+    candles=real;
+    const wasExists=!!chart;
+    if(!wasExists){
+      // first init will happen in initChart, just set candles
+    } else {
+      candleSeries.setData(candles);
+      updateIndicators();
+      chart.timeScale().fitContent();
+      document.getElementById('priceBadge').textContent='$'+candles[candles.length-1].close.toFixed(2);
+    }
+    if(badge){ badge.textContent= liveMode ? 'LIVE • '+(sym==='BTCUSD'?'BINANCE':'YAHOO')+' • TRADINGVIEW MCP' : 'MOCK • OFFLINE'; badge.style.color= liveMode ? 'var(--neon)' : 'var(--muted)'; badge.style.borderColor= liveMode ? 'var(--neon)' : 'var(--line)'; }
+  }catch(e){
+    if(badge){ badge.textContent='LIVE FETCH FAILED — MOCK'; badge.style.color='var(--red)'; }
+  }
+}
 function initChart(){
+  // start with mock, then fetch live
   candles=genCandles(400, parseFloat(document.getElementById('tSym')?.value==='BTCUSD'? 67000 : 2650));
+  loadRealChart();
   const el=document.getElementById('chart'); el.innerHTML='';
   chart=LightweightCharts.createChart(el,{layout:{background:{color:'#12121a'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{timeVisible:true, secondsVisible:false},rightPriceScale:{borderColor:'#26263a'}});
   candleSeries=chart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderVisible:false,wickUpColor:'#10b981',wickDownColor:'#ef4444'});
@@ -652,6 +714,7 @@ function initChart(){
   const rsiEl=document.getElementById('rsiBox'); if(rsiEl){ rsiChart=LightweightCharts.createChart(rsiEl,{layout:{background:{color:'#0f0f17'},textColor:'#6b7280'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{visible:false},height:90}); rsiSeries=rsiChart.addLineSeries({color:'#8b5cf6',lineWidth:1}); }
   // price ticker
   setInterval(()=>tickPrice(), 1200);
+  setInterval(()=>{ if(liveMode) loadRealChart(); }, 30000);
   window.addEventListener('resize',()=>{ chart.applyOptions({width: el.clientWidth}); if(rsiChart) rsiChart.applyOptions({width: rsiEl.clientWidth}) });
 }
 function updateIndicators(){
@@ -1221,7 +1284,9 @@ function handleEmailConfirm(){
   }, 600);
 }
 // symbol change regenerates mock
-['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ candles=genCandles(400, document.getElementById('symSel').value==='BTCUSD'||document.getElementById('btSym').value==='BTCUSD'?67000:2650); if(candleSeries) {candleSeries.setData(candles); updateIndicators()} }));
+['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ loadRealChart(); }));
+document.getElementById('symSel')?.addEventListener('change', loadRealChart);
+document.getElementById('tfSel')?.addEventListener('change', loadRealChart);
 </script>
 </body>
 </html>
