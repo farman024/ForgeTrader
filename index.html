@@ -737,16 +737,18 @@ async function loadRealChart(){
   }
 }
 function initChart(){
-  // start with mock, then fetch live
+  const el=document.getElementById('chart'); if(!el) return; el.innerHTML='';
+  const w = el.clientWidth || 800;
+  chart=LightweightCharts.createChart(el,{width:w, height:420, layout:{background:{color:'#0f0f17'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{timeVisible:true, secondsVisible:false},rightPriceScale:{borderColor:'#26263a'}});
   candles=genCandles(400, parseFloat(document.getElementById('tSym')?.value==='BTCUSD'? 67000 : 2650));
-  loadRealChart();
-  const el=document.getElementById('chart'); el.innerHTML='';
-  chart=LightweightCharts.createChart(el,{layout:{background:{color:'#12121a'},textColor:'#8b8baa'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{timeVisible:true, secondsVisible:false},rightPriceScale:{borderColor:'#26263a'}});
   candleSeries=chart.addCandlestickSeries({upColor:'#10b981',downColor:'#ef4444',borderVisible:false,wickUpColor:'#10b981',wickDownColor:'#ef4444'});
   candleSeries.setData(candles);
-  smaSeries=chart.addLineSeries({color:'#7c3aed',lineWidth:1}); updateIndicators();
+  smaSeries=chart.addLineSeries({color:'#7c3aed',lineWidth:1});
   bbU=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1}); bbL=chart.addLineSeries({color:'rgba(59,130,246,.7)',lineWidth:1});
-  chart.timeScale().fitContent();
+  updateIndicators(); chart.timeScale().fitContent();
+  // now fetch live and replace
+  loadRealChart();
+  setTimeout(()=>{ if(el.clientWidth) chart.applyOptions({width: el.clientWidth}); }, 120);
   // rsi sub
   const rsiEl=document.getElementById('rsiBox'); if(rsiEl){ rsiChart=LightweightCharts.createChart(rsiEl,{layout:{background:{color:'#0f0f17'},textColor:'#6b7280'},grid:{vertLines:{color:'#1e1e2e'},horzLines:{color:'#1e1e2e'}},timeScale:{visible:false},height:90}); rsiSeries=rsiChart.addLineSeries({color:'#8b5cf6',lineWidth:1}); }
   // price ticker
@@ -997,8 +999,22 @@ function switchView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.getElementById('view-'+name).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach(t=>t.classList.toggle('active', t.dataset.view===name));
-  if(name==='chart' && !chart) setTimeout(initChart,80);
-  if(name==='backtest' && !btChart) setTimeout(initBacktest,80);
+  if(name==='chart'){
+    if(!chart) setTimeout(initChart,80);
+    else setTimeout(()=>{
+      const el=document.getElementById('chart');
+      const rsiEl=document.getElementById('rsiBox');
+      if(el && chart){ chart.applyOptions({width: el.clientWidth}); chart.timeScale().fitContent(); }
+      if(rsiEl && rsiChart){ rsiChart.applyOptions({width: rsiEl.clientWidth}); }
+    }, 80);
+  }
+  if(name==='backtest'){
+    if(!btChart) setTimeout(initBacktest,80);
+    else setTimeout(()=>{
+      const el=document.getElementById('btChart');
+      if(el && btChart){ btChart.applyOptions({width: el.clientWidth}); btChart.timeScale().fitContent(); }
+    }, 80);
+  }
 }
 document.querySelectorAll('.nav-tab').forEach(t=> t.addEventListener('click',()=> switchView(t.dataset.view)));
 
