@@ -447,6 +447,7 @@ a{color:var(--gold2)}
         <label class="small" style="display:block">Supabase URL<input id="supaUrl" value="https://sgrvzuokqtkbwfgqlfml.supabase.co" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
         <label class="small" style="display:block;margin-top:8px">Anon Key<input id="supaKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok" type="password" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
         <label class="small" style="display:block;margin-top:8px">Sync Passcode (your worldwide ID)<input id="syncPass" placeholder="e.g. farman123" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <label class="small" style="display:block;margin-top:8px">TwelveData API Key (for GER40/NAS100 LIVE)<input id="twelveKey" placeholder="td_xxxx — leave blank to keep MOCK" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveSyncConfig()">SAVE</button><button class="btn" onclick="backupToSupabase()">BACKUP NOW</button><button class="btn" onclick="restoreFromSupabase()">RESTORE</button></div>
         <div id="syncMsg" class="small muted" style="margin-top:8px"></div>
       </div>
@@ -677,6 +678,18 @@ async function fetchCoinGeckoKlines(interval, limit=300){
     return out.slice(-limit);
   }catch(e){ throw e; }
 }
+async function fetchTwelveKlines(symbol, interval, limit=300){
+  const key=(document.getElementById('twelveKey')?.value || localStorage.getItem('twelve_key') || store.syncCfg?.twelveKey || '').trim();
+  if(!key) throw new Error('no twelve key');
+  // map intervals
+  const iv = interval==1?'1min': interval==5?'5min': interval==15?'15min': interval==60?'1h': interval==240?'4h': '1day';
+  const tdSym = symbol==='GER40' ? 'GER40' : symbol==='NAS100' ? 'NDX' : symbol;
+  const url=`https://api.twelvedata.com/time_series?symbol=${tdSym}&interval=${iv}&apikey=${key}&outputsize=${limit}&format=JSON`;
+  const res=await fetch(url); if(!res.ok) throw new Error('twelve '+res.status);
+  const j=await res.json(); if(j.code===429) throw new Error('twelve rate limit'); if(!j.values) throw new Error(j.message||'twelve no data');
+  const vals=j.values.reverse();
+  return vals.map(v=>({time:Math.floor(new Date(v.datetime).getTime()/1000), open:parseFloat(v.open), high:parseFloat(v.high), low:parseFloat(v.low), close:parseFloat(v.close)}));
+}
 async function fetchYahooKlines(symbol, interval, limit=300){
   // symbol: GC=F for Gold, EURUSD=X
   const ySym = symbol==='XAUUSD' ? 'GC=F' : symbol==='EURUSD' ? 'EURUSD=X' : symbol==='GBPUSD' ? 'GBPUSD=X' : symbol==='GER40' ? '^GDAXI' : 'GC=F';
@@ -709,6 +722,7 @@ async function fetchRealCandles(symbol, tf){
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   if(['GER40','NAS100'].includes(symbol)){
+    try{ const d=await fetchTwelveKlines(symbol, tfNum, 300); liveMode=true; try{localStorage.setItem('twelve_key', document.getElementById('twelveKey')?.value||'')}catch{} return d; }catch(e){ console.warn('twelve fail',e); }
     try{ const d=await fetchYahooKlines(symbol, tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('yahoo fail',e); }
   }
   liveMode=false; return genCandles(300, symbol==='BTCUSD'?67000:2650);
@@ -1147,7 +1161,8 @@ function saveSyncConfig(){
   const key=document.getElementById('supaKey').value.trim();
   const pass=document.getElementById('syncPass').value.trim();
   if(!url || !key || !pass) return setSyncStatus('Fill URL, Anon Key, and Passcode', 'err');
-  const cfg={supabaseUrl:url, supabaseKey:key, syncPass:pass};
+  const twelveKey=(document.getElementById('twelveKey')?.value||'').trim();
+  const cfg={supabaseUrl:url, supabaseKey:key, syncPass:pass, twelveKey}; try{localStorage.setItem('twelve_key', twelveKey)}catch{}
   store.syncCfg=cfg; save(); setSyncStatus('Saved — ready to Backup/Restore', 'ok'); toast('Sync config saved');
 }
 function loadSyncConfig(){
@@ -1155,6 +1170,7 @@ function loadSyncConfig(){
     if(document.getElementById('supaUrl')) document.getElementById('supaUrl').value=store.syncCfg.supabaseUrl||'https://sgrvzuokqtkbwfgqlfml.supabase.co';
     if(document.getElementById('supaKey')) document.getElementById('supaKey').value=store.syncCfg.supabaseKey||'';
     if(document.getElementById('syncPass')) document.getElementById('syncPass').value=store.syncCfg.syncPass||'';
+    if(document.getElementById('twelveKey')) document.getElementById('twelveKey').value=store.syncCfg.twelveKey||localStorage.getItem('twelve_key')||'';
     setSyncStatus('Config loaded — Backup to go worldwide', 'ok');
   } else {
     // prefill with provided project
