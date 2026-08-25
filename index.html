@@ -64,7 +64,8 @@ a{color:var(--gold2)}
 .nav-tabs{scrollbar-width:none;-ms-overflow-style:none} .nav-tabs::-webkit-scrollbar{display:none} .nav{scrollbar-width:none}
 #lessonModal .card{max-height:88vh;overflow:auto}
 #toast{max-width:92vw;text-align:center}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;box-shadow:0 4px 20px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.03);transition:border-color .2s, box-shadow .2s}
+.card:hover{border-color:rgba(124,58,237,.28); box-shadow:0 6px 24px rgba(124,58,237,.12), inset 0 1px 0 rgba(255,255,255,.04)}
 .card.institutional{border-radius:8px; background:linear-gradient(180deg, #0f1230, #0a0c1e); border-color:#1e2250}
 .card-h{font-size:11px;letter-spacing:.12em;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
 .btn{appearance:none;border:1px solid var(--line);background:var(--card);color:var(--text);padding:9px 12px;border-radius:10px;cursor:pointer;font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em}
@@ -92,8 +93,10 @@ a{color:var(--gold2)}
 .level-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:1000px){.level-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:540px){.level-grid{grid-template-columns:1fr}}
-.level{border:1px solid #1e2250;border-radius:10px;overflow:hidden;background:var(--panel);position:relative;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.level{border:1px solid #1e2250;border-radius:10px;overflow:hidden;background:var(--panel);position:relative;box-shadow:0 4px 16px rgba(0,0,0,.25);transition:transform .2s, box-shadow .2s, border-color .2s}
+.level:hover{transform:translateY(-3px); border-color:rgba(124,58,237,.5); box-shadow:0 8px 28px rgba(124,58,237,.22)}
 .level.locked{opacity:.55}
+.level.locked:hover{transform:none; box-shadow:0 4px 16px rgba(0,0,0,.25); border-color:#1e2250}
 .level-head{height:80px;display:flex;align-items:end;padding:10px;position:relative;overflow:hidden}
 .level-head::after{content:'';position:absolute;inset:0;opacity:.22;background:radial-gradient(300px 120px at 20% 0%, #fff, transparent 70%)}
 .level-num{position:absolute;top:10px;right:10px;font-weight:900;font-size:11px;letter-spacing:.1em;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.15);padding:3px 7px;border-radius:999px}
@@ -147,7 +150,19 @@ a{color:var(--gold2)}
 .kpi{display:flex;gap:8px;flex-wrap:wrap}
 .kpi b{font-size:12px}
 .sep{height:1px;background:var(--line);margin:10px 0}
-.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:12px;display:none;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.toast{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);background:var(--panel);border:1px solid var(--purple);padding:10px 14px;border-radius:10px;font-size:12px;display:none;z-index:99;box-shadow:0 10px 30px rgba(0,0,0,.5), 0 0 16px rgba(124,58,237,.3);animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0; transform:translateX(-50%) translateY(8px)} to{opacity:1; transform:translateX(-50%) translateY(0)}}
+.xp-float{position:fixed;pointer-events:none;z-index:80;font-weight:800;font-size:12px;color:var(--neon);text-shadow:0 0 8px rgba(0,227,140,.6);animation:xpFloat 1.1s ease-out forwards}
+@keyframes xpFloat{0%{opacity:1; transform:translateY(0)} 100%{opacity:0; transform:translateY(-36px)}}
+.rankup{position:fixed;inset:0;background:rgba(6,8,24,.78);backdrop-filter:blur(8px);display:grid;place-items:center;z-index:85}
+.rankup-card{background:linear-gradient(180deg, #0f1230, #070a1e);border:1px solid var(--purple);border-radius:14px;padding:22px 18px;text-align:center;max-width:380px;width:92%;box-shadow:0 20px 60px rgba(0,0,0,.6), 0 0 32px rgba(124,58,237,.35);animation:rankPop .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes rankPop{0%{transform:scale(.86); opacity:0} 100%{transform:scale(1); opacity:1}}
+.confetti{position:fixed;top:-10px;width:8px;height:8px;pointer-events:none;z-index:90;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg); opacity:0}}
+.btn:active{transform:scale(.97)} .nav-tab:active{transform:scale(.96)}
+.view{animation:viewFade .25s ease}
+@keyframes viewFade{from{opacity:0; transform:translateY(4px)} to{opacity:1; transform:translateY(0)}}
+.sound-toggle{position:fixed;bottom:14px;left:14px;z-index:70}
 </style>
 </head>
 <body>
@@ -378,7 +393,18 @@ const defaultStore={xp:0,level:1,streak:0,lastLockIn:null,quests:{done:0},badges
 let store=load();
 function load(){try{const s=JSON.parse(localStorage.getItem(LS_KEY)); return s?{...defaultStore,...s}: {...defaultStore}}catch{return {...defaultStore}}}
 function save(){localStorage.setItem(LS_KEY, JSON.stringify(store))}
-function addXp(n,reason){store.xp+=n;updateHud();save();toast(`+${n} XP — ${reason}`);checkBadges();checkQuest()}
+// --- EFFECTS (like Global War Room + Hunter) ---
+function ftSound(){return localStorage.getItem('ft_sound')!=='off'}
+function playTone(f,d,v=0.12,type='sine'){ if(!ftSound()) return; try{const a=new (window.AudioContext||window.webkitAudioContext)(); const o=a.createOscillator(); const g=a.createGain(); o.type=type; o.frequency.value=f; o.connect(g); g.connect(a.destination); g.gain.value=v; o.start(); g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+d); o.stop(a.currentTime+d);}catch{}}
+function soundXp(){playTone(880,.12,0.10); setTimeout(()=>playTone(1100,.10,0.08),90)}
+function soundRank(){playTone(520,.18,0.14,'triangle'); setTimeout(()=>playTone(780,.18,0.12,'triangle'),140); setTimeout(()=>playTone(1040,.22,0.10),280)}
+function soundClick(){playTone(620,.06,0.06,'square')}
+function soundBad(){playTone(180,.20,0.10,'sawtooth')}
+function xpFloat(n){ const e=document.createElement('div'); e.className='xp-float'; e.textContent='+'+n+' XP'; e.style.left=(window.innerWidth/2 + (Math.random()*80-40))+'px'; e.style.top='78px'; document.body.appendChild(e); setTimeout(()=>e.remove(),1100)}
+function confettiBurst(){ const colors=['#7c3aed','#00e38c','#a78bfa','#38bdf8','#fbbf24']; for(let i=0;i<22;i++){ const c=document.createElement('div'); c.className='confetti'; c.style.left=(Math.random()*100)+'vw'; c.style.background=colors[i%colors.length]; c.style.animationDuration=(0.9+Math.random()*0.8)+'s'; c.style.animationDelay=(Math.random()*0.15)+'s'; c.style.transform=`rotate(${Math.random()*360}deg)`; document.body.appendChild(c); setTimeout(()=>c.remove(),1800)}}
+function showRankUp(from,to){ soundRank(); confettiBurst(); const w=document.createElement('div'); w.className='rankup'; w.innerHTML=`<div class="rankup-card"><div style="font-size:11px;letter-spacing:.14em;color:var(--muted)">RANK UP</div><div style="font-size:42px;margin:8px 0">⚡</div><div style="font-size:18px;font-weight:900;letter-spacing:.06em">${from} → <span style="color:var(--gold2)">${to}</span></div><div style="font-size:11px;color:var(--muted);margin-top:8px">You forged ahead. Keep the streak.</div><button class="btn btn-primary" style="margin-top:14px" onclick="this.closest('.rankup').remove()">CONTINUE FORGING</button></div>`; w.onclick=e=>{if(e.target===w) w.remove()}; document.body.appendChild(w); setTimeout(()=>{if(w.parentNode) w.remove()}, 4200)}
+let _prevRank=getRank(store.xp).rank;
+function addXp(n,reason){ const before=getRank(store.xp).rank; store.xp+=n; const after=getRank(store.xp).rank; updateHud();save();toast(`+${n} XP — ${reason}`); soundXp(); xpFloat(n); if(before!==after) showRankUp(before, after); checkBadges();checkQuest()}
 function updateHud(){
   const r=getRank(store.xp); const nxt=getNextRank(store.xp);
   const pct = nxt ? ((store.xp - r.min)/(nxt.min - r.min))*100 : 100;
@@ -399,7 +425,7 @@ function updateHud(){
   document.getElementById('tFree').textContent='$'+store.equity.toFixed(2);
   updateQuestUI();
 }
-function toast(m){const t=document.getElementById('toast'); t.innerHTML=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2200)}
+function toast(m){const t=document.getElementById('toast'); t.innerHTML=m; t.style.display='block'; setTimeout(()=>t.style.display='none',2200); t.onclick=()=> t.style.display='none'}
 
 // --- LEVELS ---
 const LEVELS=[
@@ -793,6 +819,12 @@ function tickTicker(){
   renderTicker();
 }
 renderTicker(); setInterval(tickTicker, 1800);
+
+// sound on nav/primary clicks
+document.addEventListener('click', e=>{ if(e.target.closest('.nav-tab,.btn-primary,.btn')) soundClick()});
+function toggleSound(){ const cur=ftSound(); localStorage.setItem('ft_sound', cur?'off':'on'); const b=document.getElementById('soundBtn'); if(b) b.textContent= ftSound() ? 'SOUND: ON' : 'SOUND: OFF'; if(ftSound()) playTone(700,.08,0.08)}
+// add sound toggle button to nav-right after load
+setTimeout(()=>{ const nr=document.querySelector('.nav-right'); if(nr && !document.getElementById('soundBtn')){ const b=document.createElement('button'); b.id='soundBtn'; b.className='btn btn-sm'; b.style.fontSize='10px'; b.textContent= ftSound() ? 'SOUND: ON' : 'SOUND: OFF'; b.onclick=toggleSound; nr.appendChild(b)}}, 400);
 
 // --- INIT ---
 renderLevels(); renderLearn(); renderBadges(); updateHud(); renderTrades(); updateSessions(); setInterval(updateSessions,60000);
