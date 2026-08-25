@@ -644,10 +644,38 @@ const LIVE_INTERVAL_MAP={1:'1m',5:'5m',15:'15m',60:'1h',240:'4h',1440:'1d'};
 let liveMode=false;
 async function fetchBinanceKlines(symbol, interval, limit=300){
   const iv=LIVE_INTERVAL_MAP[interval]||'1h';
-  const url=`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${iv}&limit=${limit}`;
-  const res=await fetch(url); if(!res.ok) throw new Error('binance '+res.status);
-  const data=await res.json();
-  return data.map(k=>({time:Math.floor(k[0]/1000), open:parseFloat(k[1]), high:parseFloat(k[2]), low:parseFloat(k[3]), close:parseFloat(k[4])}));
+  const urls=[
+    `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${iv}&limit=${limit}`,
+    `https://data-api.binance.vision/api/v3/klines?symbol=${symbol}&interval=${iv}&limit=${limit}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${iv}&limit=${limit}`)}`
+  ];
+  for(const url of urls){
+    try{
+      const res=await fetch(url); if(!res.ok) continue;
+      const data=await res.json();
+      // allorigins returns raw json string? handle
+      const arr = Array.isArray(data) ? data : JSON.parse(data);
+      if(!Array.isArray(arr) || !arr.length) continue;
+      return arr.map(k=>({time:Math.floor(k[0]/1000), open:parseFloat(k[1]), high:parseFloat(k[2]), low:parseFloat(k[3]), close:parseFloat(k[4])}));
+    }catch(e){ continue; }
+  }
+  throw new Error('binance all failed');
+}
+async function fetchCoinGeckoKlines(interval, limit=300){
+  // fallback for BTC when Binance blocked — uses CoinGecko market_chart (1h-ish)
+  try{
+    const days = interval>=1440 ? 90 : interval>=240 ? 30 : 7;
+    const res=await fetch(`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=${days}`);
+    if(!res.ok) throw new Error();
+    const j=await res.json();
+    const prices=j.prices; // [timestamp, price]
+    const out=[]; for(let i=0;i<prices.length;i++){
+      const t=Math.floor(prices[i][0]/1000); const c=prices[i][1];
+      const o=i? prices[i-1][1] : c; const h=Math.max(o,c)*1.001; const l=Math.min(o,c)*0.999;
+      out.push({time:t, open:o, high:h, low:l, close:c});
+    }
+    return out.slice(-limit);
+  }catch(e){ throw e; }
 }
 async function fetchYahooKlines(symbol, interval, limit=300){
   // symbol: GC=F for Gold, EURUSD=X
@@ -662,9 +690,10 @@ async function fetchYahooKlines(symbol, interval, limit=300){
 }
 async function fetchRealCandles(symbol, tf){
   const tfNum=parseInt(tf);
-  // BTC via Binance live (CORS OK)
+  // BTC via Binance live (CORS OK) + CoinGecko fallback
   if(symbol==='BTCUSD'){
     try{ const d=await fetchBinanceKlines('BTCUSDT', tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('binance btc fail',e); }
+    try{ const d=await fetchCoinGeckoKlines(tfNum, 300); liveMode=true; return d; }catch(e){ console.warn('coingecko fail',e); }
   }
   // XAU via Binance PAXG (gold proxy, CORS OK) — avoids Yahoo CORS block
   if(symbol==='XAUUSD'){
