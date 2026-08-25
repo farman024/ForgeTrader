@@ -452,7 +452,7 @@ a{color:var(--gold2)}
         <div id="profileMsg" class="small muted" style="margin-top:8px"></div>
       </div>
     </div>
-    <div class="card" style="margin-top:14px">
+    <div class="card" id="migrateCard" style="margin-top:14px">
       <div class="card-h">WORLDWIDE SYNC — LINK ACCOUNT <span class="small muted">Auto-links passcode → email on sign-in</span></div>
       <div class="small muted">After signing in, your old <b>passcode `farman123`</b> data will be linked to your email. Next backups use your <b>user_id</b> worldwide — no passcode needed.</div>
       <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="migratePasscodeToUser()">MIGRATE `farman123` → MY ACCOUNT</button><span id="migrateMsg" class="small muted" style="align-self:center"></span></div>
@@ -1187,10 +1187,10 @@ async function migratePasscodeToUser(){
   // save under user_id as passcode = user.id for future
   const payload={passcode:user.id, data:{...data, profile:store.profile}, updated_at:new Date().toISOString()};
   const res2=await fetch(`${h.url}/rest/v1/forgetrader_data`,{method:'POST', headers:{'apikey':h.key,'Authorization':'Bearer '+h.key,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'}, body:JSON.stringify(payload)});
-  if(res2.ok){ document.getElementById('migrateMsg').textContent='Migrated ✓ — future backups use your user_id'; document.getElementById('migrateMsg').style.color='var(--neon)'; }
+  if(res2.ok){ document.getElementById('migrateMsg').textContent='Migrated ✓ — future backups use your user_id'; document.getElementById('migrateMsg').style.color='var(--neon)'; localStorage.setItem('ft_migrated','1'); setTimeout(()=>{ const c=document.getElementById('migrateCard'); if(c) c.style.display='none'; }, 1200); }
   else { document.getElementById('migrateMsg').textContent='Migrate failed'; }
 }
-setTimeout(()=>{ updateAuthUI(); loadProfile(); getSupaClient()?.auth.onAuthStateChange(()=> updateAuthUI()); handleEmailConfirm(); }, 800);
+setTimeout(()=>{ updateAuthUI(); loadProfile(); getSupaClient()?.auth.onAuthStateChange(()=> updateAuthUI()); handleEmailConfirm(); if(localStorage.getItem('ft_migrated')==='1'){ const c=document.getElementById('migrateCard'); if(c) c.style.display='none'; } }, 800);
 function handleEmailConfirm(){
   const hash=window.location.hash; const search=window.location.search;
   const isConfirm = hash.includes('access_token') || hash.includes('type=recovery') || hash.includes('type=signup') || search.includes('code=');
