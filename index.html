@@ -23,6 +23,7 @@
 <meta name="twitter:description" content="Gamified demo trading school — XP, streaks, backtests, paper trading. No real money.">
 <meta name="twitter:image" content="https://forgetrader.xyz/og-image.png">
 <script src="https://unpkg.com/lightweight-charts@4.2.1/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.42.0/dist/umd/supabase.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#070a14;--panel:#0e1026;--card:#111332;--line:#1e2250;--muted:#8b8fc0;--text:#eef0ff;--gold:#7c3aed;--gold2:#a78bfa;--orange:#00e38c;--green:#00e38c;--red:#ff3b42;--blue:#38bdf8;--rankE:#6b7280;--rankD:#00e38c;--rankC:#38bdf8;--rankB:#7c3aed;--rankA:#a78bfa;--rankS:#ff2e63;--purple:#7c3aed;--purple2:#5b21b6;--neon:#00e38c;--institutional-bg:#060818;--desk:#0a0c1e}
@@ -371,10 +372,19 @@ a{color:var(--gold2)}
         <div class="sep"></div>
         <div id="jStats" class="small" style="line-height:1.8"></div>
       </div>
+      <div class="card" style="border-color:var(--purple)">
+        <div class="card-h">CLOUD SYNC — SUPABASE WORLDWIDE <span class="badge" id="syncStatus" style="border-color:var(--neon);color:var(--neon)">OFFLINE</span></div>
+        <div class="small muted" style="margin-bottom:8px">Project: <b style="color:var(--text)">sgrvzuokqtkbwfgqlfml.supabase.co</b> • Worldwide — your XP/streak/trades sync across devices.</div>
+        <label class="small" style="display:block">Supabase URL<input id="supaUrl" value="https://sgrvzuokqtkbwfgqlfml.supabase.co" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <label class="small" style="display:block;margin-top:8px">Anon Key<input id="supaKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok" type="password" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <label class="small" style="display:block;margin-top:8px">Sync Passcode (your worldwide ID)<input id="syncPass" placeholder="e.g. farman123" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn btn-primary" onclick="saveSyncConfig()">SAVE</button><button class="btn" onclick="backupToSupabase()">BACKUP NOW</button><button class="btn" onclick="restoreFromSupabase()">RESTORE</button></div>
+        <div id="syncMsg" class="small muted" style="margin-top:8px"></div>
+      </div>
       <div class="card">
         <div class="card-h">EXPORT <span class="small muted">PWA-ready • localStorage</span></div>
         <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="exportData()">EXPORT JSON</button><button class="btn" onclick="resetAll()">RESET (keep rank?)</button></div>
-        <div class="small muted" style="margin-top:8px">Cloud sync (Supabase) ready to plug: same pattern as HabitOS `forgetrader_data` table.</div>
+        <div class="small muted" style="margin-top:8px">Local backup — Supabase is worldwide.</div>
       </div>
     </div>
     <div class="card" style="margin-top:14px">
@@ -895,6 +905,71 @@ setTimeout(()=>{ const nr=document.querySelector('.nav-right'); if(nr && !docume
 renderLevels(); renderLearn(); renderBadges(); updateHud(); renderTrades(); updateSessions(); setInterval(updateSessions,60000);
 setTimeout(()=>{ if(!chart) initChart(); },300);
 setTimeout(()=>{ if(!btChart) initBacktest(); },600);
+setTimeout(loadSyncConfig, 500);
+
+// --- SUPABASE WORLDWIDE SYNC ---
+function setSyncStatus(msg, type){
+  const el=document.getElementById('syncMsg'); const badge=document.getElementById('syncStatus');
+  if(el){ el.textContent=msg; el.style.color= type==='ok' ? 'var(--neon)' : type==='err' ? 'var(--red)' : 'var(--muted)'; }
+  if(badge){ badge.textContent= type==='ok' ? 'SYNCED' : type==='err' ? 'ERROR' : 'IDLE'; badge.style.color= type==='ok' ? 'var(--neon)' : type==='err' ? 'var(--red)' : 'var(--muted)'; badge.style.borderColor= type==='ok' ? 'var(--neon)' : type==='err' ? 'var(--red)' : 'var(--line)'; }
+}
+function saveSyncConfig(){
+  const url=document.getElementById('supaUrl').value.trim();
+  const key=document.getElementById('supaKey').value.trim();
+  const pass=document.getElementById('syncPass').value.trim();
+  if(!url || !key || !pass) return setSyncStatus('Fill URL, Anon Key, and Passcode', 'err');
+  const cfg={supabaseUrl:url, supabaseKey:key, syncPass:pass};
+  store.syncCfg=cfg; save(); setSyncStatus('Saved — ready to Backup/Restore', 'ok'); toast('Sync config saved');
+}
+function loadSyncConfig(){
+  if(store.syncCfg){
+    if(document.getElementById('supaUrl')) document.getElementById('supaUrl').value=store.syncCfg.supabaseUrl||'https://sgrvzuokqtkbwfgqlfml.supabase.co';
+    if(document.getElementById('supaKey')) document.getElementById('supaKey').value=store.syncCfg.supabaseKey||'';
+    if(document.getElementById('syncPass')) document.getElementById('syncPass').value=store.syncCfg.syncPass||'';
+    setSyncStatus('Config loaded — Backup to go worldwide', 'ok');
+  } else {
+    // prefill with provided project
+    if(document.getElementById('supaUrl')) document.getElementById('supaUrl').value='https://sgrvzuokqtkbwfgqlfml.supabase.co';
+    if(document.getElementById('supaKey')) document.getElementById('supaKey').value='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok';
+  }
+}
+function getSyncHeaders(){
+  const cfg=store.syncCfg;
+  if(!cfg || !cfg.supabaseUrl || !cfg.supabaseKey || !cfg.syncPass) return null;
+  return {url:cfg.supabaseUrl, key:cfg.supabaseKey, pass:cfg.syncPass};
+}
+async function backupToSupabase(){
+  const h=getSyncHeaders(); if(!h) return setSyncStatus('Save config first (URL/Key/Passcode)','err');
+  setSyncStatus('Syncing...','');
+  const payload={passcode:h.pass, data:store, updated_at:new Date().toISOString()};
+  try{
+    const res=await fetch(`${h.url}/rest/v1/forgetrader_data`,{
+      method:'POST',
+      headers:{'apikey':h.key,'Authorization':'Bearer '+h.key,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify(payload)
+    });
+    if(!res.ok){ const t=await res.text(); throw new Error(t); }
+    setSyncStatus('Backup OK — worldwide', 'ok'); toast('Backup to Supabase OK');
+  }catch(e){ setSyncStatus('Backup failed: '+e.message.slice(0,120), 'err'); }
+}
+async function restoreFromSupabase(){
+  const h=getSyncHeaders(); if(!h) return setSyncStatus('Save config first','err');
+  setSyncStatus('Restoring...','');
+  try{
+    const res=await fetch(`${h.url}/rest/v1/forgetrader_data?passcode=eq.${encodeURIComponent(h.pass)}&select=data`,{
+      headers:{'apikey':h.key,'Authorization':'Bearer '+h.key}
+    });
+    if(!res.ok){ const t=await res.text(); throw new Error(t); }
+    const rows=await res.json();
+    if(!rows.length) throw new Error('No backup found for this passcode');
+    const remote=rows[0].data;
+    // preserve syncCfg
+    const cfg=store.syncCfg;
+    store={...remote, syncCfg:cfg};
+    save(); updateHud(); renderLevels(); renderLearn(); renderBadges(); renderTrades();
+    setSyncStatus('Restore OK — reloaded', 'ok'); toast('Restore OK');
+  }catch(e){ setSyncStatus('Restore failed: '+e.message.slice(0,120), 'err'); }
+}
 // symbol change regenerates mock
 ['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ candles=genCandles(400, document.getElementById('symSel').value==='BTCUSD'||document.getElementById('btSym').value==='BTCUSD'?67000:2650); if(candleSeries) {candleSeries.setData(candles); updateIndicators()} }));
 </script>
