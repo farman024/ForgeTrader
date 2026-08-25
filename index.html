@@ -186,6 +186,7 @@ a{color:var(--gold2)}
     <div class="nav-tab" data-view="trade">DEMO TRADE</div>
     <div class="nav-tab" data-view="backtest">BACKTEST</div>
     <div class="nav-tab" data-view="journal">JOURNAL</div>
+    <div class="nav-tab" data-view="profile">PROFILE</div>
   </div>
   <div class="nav-right">
     <div class="hud mono" style="display:flex;align-items:center;gap:8px"><span class="live-dot"></span> LIVE <span style="color:var(--muted)">FEED</span> <b id="hudLvl">1</b> • <b id="hudXp">0</b> XP</div>
@@ -390,6 +391,56 @@ a{color:var(--gold2)}
     <div class="card" style="margin-top:14px">
       <div class="card-h">TRADE LOG — All paper trades</div>
       <div style="overflow:auto"><table class="pos-table"><thead><tr><th>Date</th><th>Symbol</th><th>Type</th><th>Lots</th><th>Entry</th><th>Exit</th><th>P/L</th><th>Note</th></tr></thead><tbody id="journalBody"></tbody></table></div>
+    </div>
+  </section>
+
+  <!-- PROFILE -->
+  <section id="view-profile" class="view">
+    <div class="grid g2">
+      <div class="card" style="border-color:var(--purple)">
+        <div class="card-h">PROFILE — TRADER IDENTITY <span class="badge" id="authStatus">GUEST</span></div>
+        <div id="authBox">
+          <div class="small muted" style="margin-bottom:10px">Sign in with email (Gmail works) — worldwide sync. Your XP & trades follow your account, not your device.</div>
+          <label class="small">Email (Gmail)<input id="authEmail" type="email" placeholder="you@gmail.com" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
+          <label class="small" style="display:block;margin-top:8px">Password<input id="authPass" type="password" placeholder="••••••••" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:9px;border-radius:8px"></label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn btn-primary" onclick="authSignUp()">SIGN UP</button>
+            <button class="btn" onclick="authSignIn()">SIGN IN</button>
+            <button class="btn" onclick="authSignOut()">SIGN OUT</button>
+          </div>
+          <div id="authMsg" class="small muted" style="margin-top:8px"></div>
+          <div class="sep"></div>
+          <div class="small muted">Signed in as: <b id="authUserEmail" style="color:var(--text)">— guest —</b> <span id="authUserId" class="small muted"></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-h">TRADER SETTINGS <span class="small muted">local + cloud</span></div>
+        <div style="display:flex;gap:14px;align-items:center">
+          <img id="profileAvatar" src="logo.png" style="width:64px;height:64px;border-radius:12px;border:1px solid var(--line);object-fit:cover">
+          <div style="flex:1">
+            <label class="small">Display Name<input id="profileName" placeholder="Farman" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px"></label>
+            <input id="profileAvatarInput" type="file" accept="image/*" style="margin-top:8px;font-size:11px">
+          </div>
+        </div>
+        <label class="small" style="display:block;margin-top:10px">Bio / Trading Goal<textarea id="profileBio" placeholder="e.g. Pass FTMO, 5% monthly, disciplined..." style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px;min-height:56px"></textarea></label>
+        <label class="small" style="display:block;margin-top:8px">Experience
+          <select id="profileExp" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px">
+            <option value="newbie">Newbie — just starting</option><option value="learner">Learner — know basics</option><option value="intermediate">Intermediate — 1yr+</option><option value="advanced">Advanced — funded/prop</option>
+          </select>
+        </label>
+        <label class="small" style="display:block;margin-top:8px">Preferred Market
+          <select id="profileMarket" style="width:100%;margin-top:6px;background:var(--card);border:1px solid var(--line);color:var(--text);padding:8px;border-radius:8px">
+            <option>XAUUSD</option><option>BTCUSD</option><option>EURUSD</option><option>NAS100</option><option>GER40</option>
+          </select>
+        </label>
+        <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-primary" onclick="saveProfile()">SAVE PROFILE</button><button class="btn" onclick="loadProfile()">LOAD</button></div>
+        <div id="profileMsg" class="small muted" style="margin-top:8px"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-h">WORLDWIDE SYNC — LINK ACCOUNT <span class="small muted">Auto-links passcode → email on sign-in</span></div>
+      <div class="small muted">After signing in, your old <b>passcode `farman123`</b> data will be linked to your email. Next backups use your <b>user_id</b> worldwide — no passcode needed.</div>
+      <div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="migratePasscodeToUser()">MIGRATE `farman123` → MY ACCOUNT</button><span id="migrateMsg" class="small muted" style="align-self:center"></span></div>
     </div>
   </section>
 </div>
@@ -970,6 +1021,127 @@ async function restoreFromSupabase(){
     setSyncStatus('Restore OK — reloaded', 'ok'); toast('Restore OK');
   }catch(e){ setSyncStatus('Restore failed: '+e.message.slice(0,120), 'err'); }
 }
+
+// --- PROFILE + GMAIL AUTH (worldwide) ---
+let supaClient=null;
+function getSupaClient(){
+  if(supaClient) return supaClient;
+  const url=(store.syncCfg?.supabaseUrl)||'https://sgrvzuokqtkbwfgqlfml.supabase.co';
+  const key=(store.syncCfg?.supabaseKey)||'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNncnZ6dW9rcXRrYndmZ3FsZm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNzYxNDAsImV4cCI6MjA4Njg1MjE0MH0.TTnDdLK_EZ6ake1DkeOkLZZDMQISI_xE2_eV-jKagok';
+  if(!window.supabase) return null;
+  supaClient=window.supabase.createClient(url, key);
+  return supaClient;
+}
+async function authSignUp(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value.trim();
+  if(!email||!pass) return setAuthMsg('Fill email + password','err');
+  setAuthMsg('Creating account...','');
+  const supa=getSupaClient(); if(!supa) return setAuthMsg('Supabase not loaded','err');
+  const {data,error}=await supa.auth.signUp({email,password:pass});
+  if(error) return setAuthMsg(error.message,'err');
+  setAuthMsg('Sign up OK — check email to confirm, then Sign In','ok'); toast('Sign up — check email');
+}
+async function authSignIn(){
+  const email=document.getElementById('authEmail').value.trim();
+  const pass=document.getElementById('authPass').value.trim();
+  if(!email||!pass) return setAuthMsg('Fill email + password','err');
+  setAuthMsg('Signing in...','');
+  const supa=getSupaClient(); const {data,error}=await supa.auth.signInWithPassword({email,password:pass});
+  if(error) return setAuthMsg(error.message,'err');
+  setAuthMsg('Signed in — '+data.user.email,'ok'); updateAuthUI(); toast('Signed in');
+}
+async function authSignOut(){
+  const supa=getSupaClient(); await supa.auth.signOut();
+  setAuthMsg('Signed out','ok'); updateAuthUI();
+}
+function setAuthMsg(m,type){
+  const el=document.getElementById('authMsg'); if(el){el.textContent=m; el.style.color= type==='ok'?'var(--neon)': type==='err'?'var(--red)':'var(--muted)'}
+  const badge=document.getElementById('authStatus'); if(badge){badge.textContent= type==='ok' ? 'SIGNED IN' : type==='err' ? 'ERROR' : 'IDLE'}
+}
+async function updateAuthUI(){
+  const supa=getSupaClient(); if(!supa) return;
+  const {data:{user}}=await supa.auth.getUser();
+  const badge=document.getElementById('authStatus'); const emailEl=document.getElementById('authUserEmail'); const idEl=document.getElementById('authUserId');
+  if(user){
+    if(badge){badge.textContent='SIGNED IN'; badge.style.color='var(--neon)'; badge.style.borderColor='var(--neon)'}
+    if(emailEl) emailEl.textContent=user.email;
+    if(idEl) idEl.textContent='('+user.id.slice(0,8)+'...)';
+    // load profile if exists
+    loadProfile();
+  } else {
+    if(badge){badge.textContent='GUEST'; badge.style.color='var(--muted)'; badge.style.borderColor='var(--line)'}
+    if(emailEl) emailEl.textContent='— guest —';
+    if(idEl) idEl.textContent='';
+  }
+}
+async function saveProfile(){
+  const name=document.getElementById('profileName').value.trim();
+  const bio=document.getElementById('profileBio').value.trim();
+  const exp=document.getElementById('profileExp').value;
+  const market=document.getElementById('profileMarket').value;
+  let avatar=document.getElementById('profileAvatar').src;
+  // if file selected, read as base64
+  const file=document.getElementById('profileAvatarInput').files[0];
+  if(file){
+    avatar=await new Promise(res=>{ const r=new FileReader(); r.onload=()=>res(r.result); r.readAsDataURL(file); });
+    document.getElementById('profileAvatar').src=avatar;
+  }
+  const profile={display_name:name, bio, exp, market, avatar, updated_at:new Date().toISOString()};
+  // save locally
+  store.profile=profile; save();
+  // try save to Supabase profiles table (if exists)
+  const supa=getSupaClient(); const {data:{user}}=await supa.auth.getUser();
+  if(user){
+    try{
+      await supa.from('profiles').upsert({id:user.id, email:user.email, display_name:name, avatar_url:avatar.slice(0,500000), bio, exp, market},{onConflict:'id'});
+      document.getElementById('profileMsg').textContent='Profile saved worldwide ✓'; document.getElementById('profileMsg').style.color='var(--neon)';
+    }catch(e){ document.getElementById('profileMsg').textContent='Saved locally (profiles table not yet created)'; }
+  } else {
+    document.getElementById('profileMsg').textContent='Saved locally — sign in to sync worldwide';
+  }
+  toast('Profile saved');
+}
+async function loadProfile(){
+  if(store.profile){
+    document.getElementById('profileName').value=store.profile.display_name||'';
+    document.getElementById('profileBio').value=store.profile.bio||'';
+    document.getElementById('profileExp').value=store.profile.exp||'newbie';
+    document.getElementById('profileMarket').value=store.profile.market||'XAUUSD';
+    if(store.profile.avatar) document.getElementById('profileAvatar').src=store.profile.avatar;
+  }
+  // try remote
+  const supa=getSupaClient(); const {data:{user}}=await supa.auth.getUser();
+  if(user){
+    try{
+      const {data,error}=await supa.from('profiles').select('*').eq('id',user.id).single();
+      if(data && !error){
+        document.getElementById('profileName').value=data.display_name||'';
+        document.getElementById('profileBio').value=data.bio||'';
+        document.getElementById('profileExp').value=data.exp||'newbie';
+        document.getElementById('profileMarket').value=data.market||'XAUUSD';
+        if(data.avatar_url) document.getElementById('profileAvatar').src=data.avatar_url;
+        document.getElementById('profileMsg').textContent='Loaded from cloud';
+      }
+    }catch{}
+  }
+}
+async function migratePasscodeToUser(){
+  const supa=getSupaClient(); const {data:{user}}=await supa.auth.getUser();
+  if(!user) return document.getElementById('migrateMsg').textContent='Sign in first';
+  const h=getSyncHeaders(); if(!h) return document.getElementById('migrateMsg').textContent='Save passcode first';
+  // fetch passcode data
+  const res=await fetch(`${h.url}/rest/v1/forgetrader_data?passcode=eq.${encodeURIComponent(h.pass)}&select=data`,{headers:{'apikey':h.key,'Authorization':'Bearer '+h.key}});
+  const rows=await res.json();
+  if(!rows.length) return document.getElementById('migrateMsg').textContent='No passcode data found';
+  const data=rows[0].data;
+  // save under user_id as passcode = user.id for future
+  const payload={passcode:user.id, data:{...data, profile:store.profile}, updated_at:new Date().toISOString()};
+  const res2=await fetch(`${h.url}/rest/v1/forgetrader_data`,{method:'POST', headers:{'apikey':h.key,'Authorization':'Bearer '+h.key,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'}, body:JSON.stringify(payload)});
+  if(res2.ok){ document.getElementById('migrateMsg').textContent='Migrated ✓ — future backups use your user_id'; document.getElementById('migrateMsg').style.color='var(--neon)'; }
+  else { document.getElementById('migrateMsg').textContent='Migrate failed'; }
+}
+setTimeout(()=>{ updateAuthUI(); loadProfile(); getSupaClient()?.auth.onAuthStateChange(()=> updateAuthUI()); }, 800);
 // symbol change regenerates mock
 ['symSel','btSym'].forEach(id=> document.getElementById(id)?.addEventListener('change',()=>{ candles=genCandles(400, document.getElementById('symSel').value==='BTCUSD'||document.getElementById('btSym').value==='BTCUSD'?67000:2650); if(candleSeries) {candleSeries.setData(candles); updateIndicators()} }));
 </script>
