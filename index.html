@@ -37,6 +37,15 @@ body{font-family:'Inter','JetBrains Mono','Consolas',monospace;background:var(--
 .ticker-item b{font-variant-numeric:tabular-nums}
 .ticker-up{color:var(--neon)} .ticker-down{color:var(--red)}
 .institutional-card{border:1px solid #1e2250; border-radius:10px; background:linear-gradient(180deg, rgba(15,18,48,.9), rgba(7,10,30,.95)); box-shadow:0 4px 24px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04)}
+#ambient{position:fixed; inset:0; z-index:-1; opacity:.55; pointer-events:none}
+.xp-fill{position:relative; overflow:hidden}
+.xp-fill::after{content:''; position:absolute; top:0; bottom:0; width:60px; background:linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent); animation:shimmer 2.2s infinite; left:-60px}
+@keyframes shimmer{0%{left:-60px} 100%{left:100%}}
+#sStreak svg{transition:transform .25s}
+#sStreak.pulse svg{transform:scale(1.25); filter:drop-shadow(0 0 6px rgba(0,227,140,.8))}
+.spark{height:28px; margin-top:6px; opacity:.9}
+.type-cursor::after{content:'▌'; animation:blink 1s step-end infinite; color:var(--neon)}
+@keyframes blink{50%{opacity:0}}
 a{color:var(--gold2)}
 /* NAV */
 .nav{position:sticky;top:0;z-index:50;background:rgba(7,10,30,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:0;padding:0 14px;height:56px;overflow-x:auto}
@@ -166,6 +175,7 @@ a{color:var(--gold2)}
 </style>
 </head>
 <body>
+<canvas id="ambient" width="1200" height="800"></canvas>
 <nav class="nav">
   <div class="nav-logo"><img src="logo.png" alt="ForgeTrader"><b>FORGE</b>TRADER <span><span class="live-dot"></span> DEMO • PAPER ONLY</span></div>
   <div class="nav-tabs" id="tabs">
@@ -192,10 +202,10 @@ a{color:var(--gold2)}
         <h1>Forge your <b>trader</b> — before you risk a cent.</h1>
         <p>Game-like path from zero → profitable. Hunter ranks, streaks, quests, TradingView charts, and MT5-style demo execution. Learn, trade, backtest — get addicted to getting better.</p>
         <div class="statrow">
-          <div class="stat"><b id="sRank">E-RANK</b><span>RANK (E→S)</span></div>
-          <div class="stat"><b id="sLevel">LV 1</b><span>LEVEL</span></div>
-          <div class="stat"><b id="sStreak">0 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 2C9 7 5 8.5 5 13a7 7 0 0 0 14 0C19 8.5 15 7 12 2z" fill="#00e38c" stroke="#00e38c" stroke-width="1.2"/><path d="M12 13c0 1.2 1 2 1 3" stroke="#070a1e" stroke-width="1.2" stroke-linecap="round"/></svg></b><span>DAY STREAK</span></div>
-          <div class="stat"><b id="sBalance">$10,000</b><span>PAPER BALANCE</span></div>
+          <div class="stat"><b id="sRank">E-RANK</b><span>RANK (E→S)</span><div class="spark" id="sparkRank"></div></div>
+          <div class="stat"><b id="sLevel">LV 1</b><span>LEVEL</span><div class="spark" id="sparkLvl"></div></div>
+          <div class="stat"><b id="sStreak">0 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 2C9 7 5 8.5 5 13a7 7 0 0 0 14 0C19 8.5 15 7 12 2z" fill="#00e38c" stroke="#00e38c" stroke-width="1.2"/><path d="M12 13c0 1.2 1 2 1 3" stroke="#070a1e" stroke-width="1.2" stroke-linecap="round"/></svg></b><span>DAY STREAK</span><div class="spark" id="sparkStreak"></div></div>
+          <div class="stat"><b id="sBalance">$10,000</b><span>PAPER BALANCE</span><div class="spark" id="sparkBal"></div></div>
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
           <button class="btn btn-primary" onclick="switchView('learn')">START LESSON →</button>
@@ -819,6 +829,61 @@ function tickTicker(){
   renderTicker();
 }
 renderTicker(); setInterval(tickTicker, 1800);
+
+// --- AMBIENT MESH ---
+(function(){
+  const c=document.getElementById('ambient'); if(!c) return; const ctx=c.getContext('2d');
+  let w=innerWidth, h=innerHeight; function resize(){ w=innerWidth; h=innerHeight; c.width=w; c.height=h; } resize(); addEventListener('resize',resize);
+  let t=0; function frame(){
+    t+=0.006; ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle='rgba(30,34,80,.14)'; ctx.lineWidth=1;
+    const gs=88; ctx.beginPath();
+    for(let x=0;x<w;x+=gs){ ctx.moveTo(x,0); ctx.lineTo(x+ Math.sin(t*0.6)*10, h); }
+    for(let y=0;y<h;y+=gs){ ctx.moveTo(0,y); ctx.lineTo(w, y+ Math.cos(t*0.5)*10); }
+    ctx.stroke();
+    const g1=ctx.createRadialGradient(w*0.22, h*0.18, 0, w*0.22, h*0.18, 520);
+    g1.addColorStop(0,'rgba(124,58,237,.13)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle=g1; ctx.beginPath(); ctx.arc(w*0.22 + Math.sin(t)*16, h*0.18 + Math.cos(t*0.7)*10, 520,0,Math.PI*2); ctx.fill();
+    const g2=ctx.createRadialGradient(w*0.88, h*0.78, 0, w*0.88, h*0.78, 460);
+    g2.addColorStop(0,'rgba(0,227,140,.08)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(w*0.88 + Math.cos(t*0.9)*12, h*0.78 + Math.sin(t*0.8)*8, 460,0,Math.PI*2); ctx.fill();
+    requestAnimationFrame(frame);
+  } frame();
+})();
+
+// --- SPARKLINES ---
+function makeSpark(id, color){
+  const el=document.getElementById(id); if(!el) return;
+  el.innerHTML='';
+  const ch=LightweightCharts.createChart(el,{layout:{background:{color:'transparent'},textColor:'#1e2250'},grid:{vertLines:{visible:false},horzLines:{visible:false}},timeScale:{visible:false},rightPriceScale:{visible:false},crosshair:{vertLine:{visible:false},horzLine:{visible:false}},height:32,width:el.clientWidth});
+  const s=ch.addAreaSeries({lineColor:color,topColor:color+'33',bottomColor:color+'00',lineWidth:1.6});
+  const data=[]; let v=50; for(let i=0;i<28;i++){ v+= (Math.random()-0.48)*8; v=Math.max(10,Math.min(90,v)); data.push({time:i, value:v});}
+  s.setData(data); ch.timeScale().fitContent();
+  setInterval(()=>{ v+=(Math.random()-0.5)*4; data.shift(); data.push({time:data[data.length-1].time+1, value:Math.max(10,Math.min(90,v))}); s.setData(data); }, 1600);
+  addEventListener('resize',()=> ch.applyOptions({width:el.clientWidth}));
+}
+setTimeout(()=>{ makeSpark('sparkRank','#7c3aed'); makeSpark('sparkLvl','#a78bfa'); makeSpark('sparkStreak','#00e38c'); makeSpark('sparkBal','#38bdf8'); }, 700);
+
+// --- TYPEWRITER FORGE AI ---
+const _addChatOrig = addChat;
+function typeWriter(el, html, speed=14){
+  const temp=document.createElement('div'); temp.innerHTML=html;
+  const text=temp.innerHTML; // keep tags, type as HTML is tricky — simple: type stripped then set html at end with cursor
+  let i=0; el.innerHTML=''; el.classList.add('type-cursor');
+  function step(){
+    if(i < text.length){
+      // if next is tag, jump to end of tag
+      if(text[i]==='<'){ const end=text.indexOf('>', i); if(end!==-1){ i=end+1; el.innerHTML=text.slice(0,i); logScroll(); setTimeout(step, speed); return; } }
+      i++; el.innerHTML=text.slice(0,i); logScroll(); setTimeout(step, speed);
+    } else { el.classList.remove('type-cursor'); }
+  }
+  function logScroll(){ const log=document.getElementById('chatLog'); if(log) log.scrollTop=log.scrollHeight; }
+  step();
+}
+addChat = function(who, text){
+  const log=document.getElementById('chatLog'); const d=document.createElement('div'); d.className='msg '+(who==='user'?'user':'bot'); log.appendChild(d); log.scrollTop=log.scrollHeight;
+  if(who==='bot'){ typeWriter(d, text, 12); if(ftSound()){ let c=0; const iv=setInterval(()=>{ playTone(620+Math.random()*80,.04,0.03,'sine'); if(++c>6) clearInterval(iv)}, 70)} } else { d.innerHTML=text; }
+}
 
 // sound on nav/primary clicks
 document.addEventListener('click', e=>{ if(e.target.closest('.nav-tab,.btn-primary,.btn')) soundClick()});
